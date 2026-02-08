@@ -1,0 +1,210 @@
+{
+  "app": {
+    "name": "Rural e-Governance",
+    "description": "Digital governance for rural development",
+    "loading": "Loading...",
+    "welcome": "Welcome to Grama e-Seva",
+    "tagline": "Rural Governance Portal"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "complaints": "Complaints",
+    "services": "Services",
+    "citizens": "Citizens",
+    "officers": "Officers",
+    "reports": "Reports",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "resolved": "Resolved",
+    "rejected": "Rejected"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "category": {
+    "pothole": "Pothole",
+    "sanitation": "Sanitation",
+    "water": "Water",
+    "electricity": "Electricity",
+    "drainage": "Drainage",
+    "streetLight": "Street Light",
+    "other": "Other"
+  },
+  "button": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "filter": "Filter",
+    "assign": "Assign",
+    "message": "Message",
+    "preview": "Preview",
+    "download": "Download",
+    "confirm": "Confirm",
+    "login": "Login",
+    "register": "Register",
+    "submit": "Submit",
+    "close": "Close",
+    "refresh": "Refresh"
+  },
+  "complaints": {
+    "board": "Complaints Board",
+    "dragDrop": "Drag and drop complaints to update their status",
+    "search": "Search complaints...",
+    "filter": "Filters",
+    "priority": "Priority",
+    "category": "Category",
+    "dateRange": "Date Range",
+    "village": "Village",
+    "status": "Status",
+    "title": "Title",
+    "description": "Description",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "assignedTo": "Assigned To",
+    "actions": "Actions"
+  },
+  "homepage": {
+    "hero": {
+      "tagline": "Empowering Rural India",
+      "title1": "Digital Governance",
+      "title2": "For Every Village",
+      "description": "Bridging the digital divide with accessible e-governance solutions. Empowering rural communities through transparent, efficient, and citizen-centric services."
+    },
+    "features": {
+      "languages": "12+ Regional Languages",
+      "offline": "Offline-First Design",
+      "secure": "Secure & Verified"
+    },
+    "roles": {
+      "title": "Access Digital Services",
+      "subtitle": "Select your role to access personalized governance services designed for rural empowerment",
+      "citizen": {
+        "title": "Citizen",
+        "description": "File complaints, check schemes, access learning materials",
+        "features": {
+          "eligibility": "AI Scheme Eligibility Checker",
+          "complaints": "Complaint Filing with Photos",
+          "learning": "Learning Portal"
+        }
+      },
+      "officer": {
+        "title": "Government Officer",
+        "description": "Handle complaints, track progress, manage schemes",
+        "features": {
+          "management": "Complaint Management",
+          "schemes": "Scheme Administration",
+          "support": "Citizen Support"
+        }
+      },
+      "admin": {
+        "title": "Administrator",
+        "description": "Manage users, monitor system, generate reports",
+        "features": {
+          "users": "User Management",
+          "monitoring": "System Monitoring",
+          "analytics": "Analytics & Reports"
+        }
+      }
+    },
+    "stats": {
+      "villages": "Villages Served",
+      "schemes": "Schemes Processed",
+      "resolution": "Resolution Rate",
+      "service": "Service Available"
+    },
+    "featuresList": {
+      "title": "Transforming Rural Governance",
+      "subtitle": "Comprehensive digital solutions designed for rural India's unique needs",
+      "eligibility": "AI Eligibility Checker",
+      "eligibilityDesc": "Instant verification for government schemes",
+      "applications": "Digital Applications",
+      "applicationsDesc": "Paperless applications for all services",
+      "jobs": "Job Portal",
+      "jobsDesc": "Government and local employment opportunities",
+      "tracking": "Progress Tracking",
+      "trackingDesc": "Real-time status updates on all requests"
+    },
+    "services": {
+      "transparent": "Transparent Process",
+      "transparentDesc": "End-to-end tracking of all applications",
+      "secure": "Secure Platform",
+      "secureDesc": "Aadhaar verified secure transactions",
+      "literacy": "Digital Literacy",
+      "literacyDesc": "Training materials in local languages"
+    }
+  },
+  "form": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "village": "Village",
+    "district": "District",
+    "state": "State",
+    "pincode": "Pincode",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "messages": {
+    "confirmDelete": "Are you sure you want to delete this?",
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "updated": "Updated successfully",
+    "moved": "Status updated to {status}",
+    "error": {
+      "network": "Network error. Please try again.",
+      "server": "Server error. Please try again later.",
+      "unauthorized": "Unauthorized access."
+    }
+  },
+  "filter": {
+    "all": "All",
+    "allPriorities": "All Priorities",
+    "allCategories": "All Categories",
+    "allVillages": "All Villages",
+    "today": "Today",
+    "week": "This Week",
+    "month": "This Month",
+    "allTime": "All Time"
+  },
+  "empty": {
+    "noComplaints": "No complaints yet",
+    "addSample": "Add Sample Complaint",
+    "noData": "No data available"
+  },
+  "instructions": {
+    "howToUse": "How to use the Kanban Board",
+    "dragInfo": "Drag & Drop",
+    "dragDescription": "Grab the handle and drag between columns",
+    "messageInfo": "Message Citizen",
+    "messageDescription": "Click message icon to update complainant",
+    "optionsInfo": "More Options",
+    "optionsDescription": "Click three dots for preview, edit, delete"
+  },
+  "footer": {
+    "appName": "Grama e-Seva",
+    "tagline": "Rural e-Governance Portal",
+    "description": "Empowering rural communities through transparent, accessible, and efficient digital governance.",
+    "initiative": "Digital India Initiative",
+    "ministry": "Ministry of Rural Development",
+    "copyright": "Rural e-Governance Portal. All rights reserved.",
+    "mission": "A collaborative initiative towards inclusive digital governance for rural India"
+  }
+}

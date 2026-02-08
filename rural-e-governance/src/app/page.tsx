@@ -1,8 +1,9 @@
-// src/app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/hooks/useTranslation';
+import { SimpleLanguageSwitcher } from '@/components/SimpleLanguageSwitcher';
 import { 
   Users, 
   ShieldCheck, 
@@ -24,49 +25,90 @@ import RoleCard from '@/components/common/RoleCard';
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  // Force re-render when language changes
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      window.location.reload();
+    };
+
+    window.addEventListener('languageChange', handleLanguageChange);
+    
+    return () => {
+      window.removeEventListener('languageChange', handleLanguageChange);
+    };
+  }, []);
 
   const roles = [
     {
       id: 'citizen',
-      title: 'Citizen',
-      description: 'File complaints, check schemes, access learning materials',
+      title: t('homepage.roles.citizen.title'),
+      description: t('homepage.roles.citizen.description'),
       icon: Users,
       color: 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100',
       textColor: 'text-emerald-700',
       iconColor: 'text-emerald-600',
       features: [
-        { icon: MessageSquare, text: 'AI Scheme Eligibility Checker' },
-        { icon: Smartphone, text: 'Complaint Filing with Photos' },
-        { icon: BookOpen, text: 'Learning Portal' },
+        { 
+          icon: MessageSquare, 
+          text: t('homepage.roles.citizen.features.eligibility') 
+        },
+        { 
+          icon: Smartphone, 
+          text: t('homepage.roles.citizen.features.complaints') 
+        },
+        { 
+          icon: BookOpen, 
+          text: t('homepage.roles.citizen.features.learning') 
+        },
       ]
     },
     {
       id: 'officer',
-      title: 'Government Officer',
-      description: 'Handle complaints, track progress, manage schemes',
+      title: t('homepage.roles.officer.title'),
+      description: t('homepage.roles.officer.description'),
       icon: ShieldCheck,
       color: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100',
       textColor: 'text-blue-700',
       iconColor: 'text-blue-600',
       features: [
-        { icon: MessageSquare, text: 'Complaint Management' },
-        { icon: Building2, text: 'Scheme Administration' },
-        { icon: Users, text: 'Citizen Support' },
+        { 
+          icon: MessageSquare, 
+          text: t('homepage.roles.officer.features.management') 
+        },
+        { 
+          icon: Building2, 
+          text: t('homepage.roles.officer.features.schemes') 
+        },
+        { 
+          icon: Users, 
+          text: t('homepage.roles.officer.features.support') 
+        },
       ]
     },
     {
       id: 'admin',
-      title: 'Administrator',
-      description: 'Manage users, monitor system, generate reports',
+      title: t('homepage.roles.admin.title'),
+      description: t('homepage.roles.admin.description'),
       icon: Building2,
       color: 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-100',
       textColor: 'text-purple-700',
       iconColor: 'text-purple-600',
       features: [
-        { icon: Users, text: 'User Management' },
-        { icon: ShieldCheck, text: 'System Monitoring' },
-        { icon: Globe, text: 'Analytics & Reports' },
+        { 
+          icon: Users, 
+          text: t('homepage.roles.admin.features.users') 
+        },
+        { 
+          icon: ShieldCheck, 
+          text: t('homepage.roles.admin.features.monitoring') 
+        },
+        { 
+          icon: Globe, 
+          text: t('homepage.roles.admin.features.analytics') 
+        },
       ]
     },
   ];
@@ -75,6 +117,33 @@ export default function Home() {
     setSelectedRole(roleId);
     router.push(`/login?role=${roleId}`);
   };
+
+  const features = [
+    {
+      icon: MessageSquare,
+      title: t('homepage.featuresList.eligibility'),
+      description: t('homepage.featuresList.eligibilityDesc'),
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: FileText,
+      title: t('homepage.featuresList.applications'),
+      description: t('homepage.featuresList.applicationsDesc'),
+      color: 'from-emerald-500 to-teal-500'
+    },
+    {
+      icon: Briefcase,
+      title: t('homepage.featuresList.jobs'),
+      description: t('homepage.featuresList.jobsDesc'),
+      color: 'from-amber-500 to-orange-500'
+    },
+    {
+      icon: TrendingUp,
+      title: t('homepage.featuresList.tracking'),
+      description: t('homepage.featuresList.trackingDesc'),
+      color: 'from-purple-500 to-pink-500'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-25 to-gray-50">
@@ -88,15 +157,21 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-800 bg-clip-text text-transparent">
-                  Grama e-Seva
+                  {t('app.name')}
                 </h1>
-                <p className="text-xs text-gray-500">Rural Governance Portal</p>
+                <p className="text-xs text-gray-500">{t('app.tagline')}</p>
               </div>
             </div>
-            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">
-                🇮🇳 Digital India Initiative
-              </span>
+            
+            <div className="flex items-center space-x-4">
+              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">
+                  🇮🇳 {t('footer.initiative')}
+                </span>
+              </div>
+              
+              {/* Language Switcher */}
+              <SimpleLanguageSwitcher />
             </div>
           </div>
         </div>
@@ -112,34 +187,41 @@ export default function Home() {
         <div className="relative container mx-auto px-6 py-20 text-center">
           <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 border border-white/20">
             <Leaf className="h-4 w-4 text-emerald-200 mr-2" />
-            <span className="text-emerald-100 text-sm">Empowering Rural India</span>
+            <span className="text-emerald-100 text-sm">
+              {t('homepage.hero.tagline')}
+            </span>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-            <span className="text-white">Digital Governance</span>
+            <span className="text-white">{t('homepage.hero.title1')}</span>
             <br />
             <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">
-              For Every Village
+              {t('homepage.hero.title2')}
             </span>
           </h1>
           
           <p className="text-xl text-emerald-100 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Bridging the digital divide with accessible e-governance solutions.
-            Empowering rural communities through transparent, efficient, and citizen-centric services.
+            {t('homepage.hero.description')}
           </p>
           
           <div className="flex flex-wrap justify-center gap-6 mb-16">
             <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
               <Globe className="h-5 w-5 text-emerald-200 mr-2" />
-              <span className="text-white">12+ Regional Languages</span>
+              <span className="text-white">
+                {t('homepage.features.languages')}
+              </span>
             </div>
             <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
               <Smartphone className="h-5 w-5 text-emerald-200 mr-2" />
-              <span className="text-white">Offline-First Design</span>
+              <span className="text-white">
+                {t('homepage.features.offline')}
+              </span>
             </div>
             <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
               <Award className="h-5 w-5 text-emerald-200 mr-2" />
-              <span className="text-white">Secure & Verified</span>
+              <span className="text-white">
+                {t('homepage.features.secure')}
+              </span>
             </div>
           </div>
           
@@ -157,10 +239,10 @@ export default function Home() {
               <Users className="h-8 w-8 text-emerald-700" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-              Access <span className="text-emerald-700">Digital Services</span>
+              {t('homepage.roles.title')}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Select your role to access personalized governance services designed for rural empowerment
+              {t('homepage.roles.subtitle')}
             </p>
           </div>
 
@@ -183,19 +265,27 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div className="p-6">
               <div className="text-4xl font-bold mb-2">50K+</div>
-              <p className="text-emerald-200">Villages Served</p>
+              <p className="text-emerald-200">
+                {t('homepage.stats.villages')}
+              </p>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold mb-2">1.2M+</div>
-              <p className="text-emerald-200">Schemes Processed</p>
+              <p className="text-emerald-200">
+                {t('homepage.stats.schemes')}
+              </p>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold mb-2">98%</div>
-              <p className="text-emerald-200">Resolution Rate</p>
+              <p className="text-emerald-200">
+                {t('homepage.stats.resolution')}
+              </p>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold mb-2">24/7</div>
-              <p className="text-emerald-200">Service Available</p>
+              <p className="text-emerald-200">
+                {t('homepage.stats.service')}
+              </p>
             </div>
           </div>
         </div>
@@ -205,40 +295,15 @@ export default function Home() {
       <div className="container mx-auto px-6 py-20">
         <div className="text-center mb-16">
           <h3 className="text-3xl font-bold text-gray-900 mb-4">
-            Transforming Rural <span className="text-emerald-700">Governance</span>
+            {t('homepage.featuresList.title')}
           </h3>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Comprehensive digital solutions designed for rural India's unique needs
+            {t('homepage.featuresList.subtitle')}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              icon: MessageSquare,
-              title: 'AI Eligibility Checker',
-              description: 'Instant verification for government schemes',
-              color: 'from-blue-500 to-cyan-500'
-            },
-            {
-              icon: FileText,
-              title: 'Digital Applications',
-              description: 'Paperless applications for all services',
-              color: 'from-emerald-500 to-teal-500'
-            },
-            {
-              icon: Briefcase,
-              title: 'Job Portal',
-              description: 'Government and local employment opportunities',
-              color: 'from-amber-500 to-orange-500'
-            },
-            {
-              icon: TrendingUp,
-              title: 'Progress Tracking',
-              description: 'Real-time status updates on all requests',
-              color: 'from-purple-500 to-pink-500'
-            }
-          ].map((feature, index) => (
+          {features.map((feature, index) => (
             <div key={index} className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
               <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-4 shadow-md`}>
                 <feature.icon className="h-6 w-6 text-white" />
@@ -258,18 +323,30 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <CheckCircle className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">Transparent Process</h4>
-              <p className="text-sm text-gray-600">End-to-end tracking of all applications</p>
+              <h4 className="font-semibold mb-2">
+                {t('homepage.services.transparent')}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {t('homepage.services.transparentDesc')}
+              </p>
             </div>
             <div className="text-center">
               <ShieldCheck className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">Secure Platform</h4>
-              <p className="text-sm text-gray-600">Aadhaar verified secure transactions</p>
+              <h4 className="font-semibold mb-2">
+                {t('homepage.services.secure')}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {t('homepage.services.secureDesc')}
+              </p>
             </div>
             <div className="text-center">
               <BookOpen className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">Digital Literacy</h4>
-              <p className="text-sm text-gray-600">Training materials in local languages</p>
+              <h4 className="font-semibold mb-2">
+                {t('homepage.services.literacy')}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {t('homepage.services.literacyDesc')}
+              </p>
             </div>
           </div>
         </div>
@@ -285,12 +362,16 @@ export default function Home() {
                   <Globe className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Grama e-Seva</h3>
-                  <p className="text-sm text-gray-400">Rural e-Governance Portal</p>
+                  <h3 className="text-xl font-bold">
+                    {t('footer.appName')}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {t('footer.tagline')}
+                  </p>
                 </div>
               </div>
               <p className="text-gray-400 max-w-md">
-                Empowering rural communities through transparent, accessible, and efficient digital governance.
+                {t('footer.description')}
               </p>
             </div>
             
@@ -300,18 +381,24 @@ export default function Home() {
                   <span className="font-bold">🇮🇳</span>
                 </div>
                 <div className="text-sm">
-                  <p className="font-medium">Digital India Initiative</p>
-                  <p className="text-gray-400">Ministry of Rural Development</p>
+                  <p className="font-medium">
+                    {t('footer.initiative')}
+                  </p>
+                  <p className="text-gray-400">
+                    {t('footer.ministry')}
+                  </p>
                 </div>
               </div>
               <p className="text-gray-400 text-sm">
-                © 2024 Rural e-Governance Portal. All rights reserved.
+                © 2024 {t('footer.copyright')}
               </p>
             </div>
           </div>
           
           <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400 text-sm">
-            <p>A collaborative initiative towards inclusive digital governance for rural India</p>
+            <p>
+              {t('footer.mission')}
+            </p>
           </div>
         </div>
       </footer>
