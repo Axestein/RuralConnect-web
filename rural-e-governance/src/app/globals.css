@@ -1,3 +1,12 @@
+/* Google Fonts imports must come FIRST
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Odia:wght@400;500;600;700&display=swap'); */
+
 /* src/app/globals.css */
 @reference "tailwindcss";
 /* src/styles/globals.css */
@@ -29,4 +38,47 @@
   .card {
     @apply bg-white rounded-xl shadow-md p-6;
   }
+}
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: 'Inter', 'Noto Sans', sans-serif;
+}
+
+/* Language-specific font settings */
+:lang(en) {
+  font-family: 'Inter', 'Noto Sans', sans-serif;
+}
+
+:lang(hi) {
+  font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+}
+
+:lang(ta) {
+  font-family: 'Noto Sans Tamil', 'Noto Sans', sans-serif;
+}
+
+:lang(te) {
+  font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif;
+}
+
+:lang(bn) {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', sans-serif;
+}
+
+:lang(mr) {
+  font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+}
+
+:lang(or) {
+  font-family: 'Noto Sans Odia', 'Noto Sans', sans-serif;
 }
