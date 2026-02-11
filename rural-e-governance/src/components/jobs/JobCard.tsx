@@ -1,5 +1,5 @@
 // src/components/jobs/JobCard.tsx
-import { MapPin, Briefcase, Clock } from 'lucide-react';
+import { MapPin, Briefcase, Clock,DollarSign } from 'lucide-react';
 
 interface JobCardProps {
   title: string;
@@ -44,7 +44,7 @@ export default function JobCard({
           <span className="text-sm">{location}</span>
         </div>
         <div className="flex items-center text-gray-600">
-          <Rupee className="h-4 w-4 mr-2" />
+          <DollarSign className="h-4 w-4 mr-2" />
           <span className="text-sm">{salary}</span>
         </div>
         <div className="flex items-center text-gray-600">
