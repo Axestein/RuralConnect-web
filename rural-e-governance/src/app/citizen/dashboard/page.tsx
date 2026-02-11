@@ -25,7 +25,8 @@ import {
   MoreVertical,
   Shield,
   Award,
-  Target
+  Target,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import DashboardCard from '@/components/common/DashboardCard';
@@ -98,6 +99,13 @@ export default function CitizenDashboard() {
       icon: Briefcase,
       href: '/citizen/jobs',
       gradient: 'from-amber-500 to-orange-500'
+    },
+    {
+    title: 'Scheme Eligibility',
+    description: 'AI-powered government scheme matching',
+    icon: Sparkles,
+    href: '/citizen/schemes',
+    gradient: 'from-purple-500 to-pink-500'
     },
   ];
 
