@@ -452,6 +452,28 @@ export default function CitizenDashboard() {
             </div>
           </div>
         </div>
+{/* 
+         <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="bg-green-600 p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+        >
+          <Calendar className="h-6 w-6 text-white" />
+        </button>
+
+        {isChatOpen && (
+          <div className="absolute bottom-16 right-0 w-96 bg-white rounded-lg shadow-xl">
+            <iframe
+              src="https://www.chatbase.co/chatbot-iframe/4kDzzgyUQbdvNCitA9Nz5"
+              width="100%"
+              style={{ height: '600px', border: 'none' }}
+              frameBorder="0"
+              title="Chatbot"
+            ></iframe>
+          </div>
+        )}
+      </div> */}
+
       </main>
     </div>
   );
