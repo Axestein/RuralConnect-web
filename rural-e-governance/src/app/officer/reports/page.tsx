@@ -1,19 +1,10 @@
-// src/app/officer/reports/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Download, 
-  Filter, 
-  Calendar, 
-  FileText, 
-  BarChart3,
-  TrendingUp,
-  Users,
-  MapPin,
-  Printer,
-  Eye,
-  Share2
+import { useState } from 'react';
+import {
+  Download, Filter, Calendar, FileText, BarChart3,
+  TrendingUp, MapPin, Printer, Eye, Share2, ArrowUpRight,
+  Clock, HardDrive, Zap, ChevronRight
 } from 'lucide-react';
 
 interface ReportData {
@@ -26,70 +17,37 @@ interface ReportData {
   downloadUrl: string;
 }
 
+const initialReports: ReportData[] = [
+  { id: '1', title: 'Daily Complaint Report', type: 'daily', generatedDate: '2024-01-15', period: 'Jan 15, 2024', size: '2.4 MB', downloadUrl: '#' },
+  { id: '2', title: 'Weekly Resolution Report', type: 'weekly', generatedDate: '2024-01-14', period: 'Jan 8–14, 2024', size: '3.8 MB', downloadUrl: '#' },
+  { id: '3', title: 'Monthly Performance Report', type: 'monthly', generatedDate: '2024-01-01', period: 'December 2023', size: '5.2 MB', downloadUrl: '#' },
+  { id: '4', title: 'Village-wise Analysis', type: 'custom', generatedDate: '2024-01-10', period: 'Custom Range', size: '4.1 MB', downloadUrl: '#' },
+];
+
+const typeConfig = {
+  daily:   { label: 'Daily',   bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+  weekly:  { label: 'Weekly',  bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
+  monthly: { label: 'Monthly', bg: '#f5f3ff', color: '#7c3aed', border: '#ddd6fe' },
+  custom:  { label: 'Custom',  bg: '#fff7ed', color: '#ea580c', border: '#fed7aa' },
+};
+
 export default function OfficerReportsPage() {
-  const [reports, setReports] = useState<ReportData[]>([
-    {
-      id: '1',
-      title: 'Daily Complaint Report',
-      type: 'daily',
-      generatedDate: '2024-01-15',
-      period: 'Jan 15, 2024',
-      size: '2.4 MB',
-      downloadUrl: '#'
-    },
-    {
-      id: '2',
-      title: 'Weekly Resolution Report',
-      type: 'weekly',
-      generatedDate: '2024-01-14',
-      period: 'Jan 8-14, 2024',
-      size: '3.8 MB',
-      downloadUrl: '#'
-    },
-    {
-      id: '3',
-      title: 'Monthly Performance Report',
-      type: 'monthly',
-      generatedDate: '2024-01-01',
-      period: 'December 2023',
-      size: '5.2 MB',
-      downloadUrl: '#'
-    },
-    {
-      id: '4',
-      title: 'Village-wise Analysis',
-      type: 'custom',
-      generatedDate: '2024-01-10',
-      period: 'Custom Range',
-      size: '4.1 MB',
-      downloadUrl: '#'
-    },
-  ]);
+  const [reports, setReports] = useState<ReportData[]>(initialReports);
+  const [filters, setFilters] = useState({ type: 'all', dateRange: 'month' });
+  const [generating, setGenerating] = useState<string | null>(null);
 
-  const [filters, setFilters] = useState({
-    type: 'all',
-    dateRange: 'month',
-    village: 'all'
-  });
-
-  // Generate PDF Report function
   const generatePDFReport = (type: string) => {
+    setGenerating(type);
+
     const reportData = {
       title: `${type} Report - Rural e-Governance`,
       date: new Date().toLocaleDateString(),
       officer: 'Vikram Singh (RDO-234)',
-      summary: {
-        totalComplaints: 156,
-        resolved: 89,
-        inProgress: 42,
-        pending: 25,
-        resolutionRate: '78%',
-        avgResolutionTime: '2.3 days'
-      },
+      summary: { totalComplaints: 156, resolved: 89, inProgress: 42, pending: 25, resolutionRate: '78%', avgResolutionTime: '2.3 days' },
       villageWiseData: [
-        { village: 'Village A', complaints: 45, resolved: 35 },
-        { village: 'Village B', complaints: 38, resolved: 28 },
-        { village: 'Village C', complaints: 33, resolved: 26 },
+        { village: 'Rampur', complaints: 45, resolved: 35 },
+        { village: 'Chandpur', complaints: 38, resolved: 28 },
+        { village: 'Sitapur', complaints: 33, resolved: 26 },
       ],
       topIssues: [
         { category: 'Potholes', count: 56 },
@@ -98,324 +56,279 @@ export default function OfficerReportsPage() {
       ]
     };
 
-    // Create PDF content
-    const pdfContent = `
-      <html>
-        <head>
-          <title>${reportData.title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            h1 { color: #2563eb; }
-            .header { border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-            .section { margin-bottom: 25px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f3f4f6; }
-            .stats { display: flex; justify-content: space-between; margin-top: 20px; }
-            .stat-box { flex: 1; text-align: center; padding: 15px; background: #f8fafc; margin: 0 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>${reportData.title}</h1>
-            <p><strong>Generated:</strong> ${reportData.date}</p>
-            <p><strong>Officer:</strong> ${reportData.officer}</p>
-          </div>
-          
-          <div class="section">
-            <h2>Executive Summary</h2>
-            <div class="stats">
-              <div class="stat-box">
-                <h3>${reportData.summary.totalComplaints}</h3>
-                <p>Total Complaints</p>
-              </div>
-              <div class="stat-box">
-                <h3>${reportData.summary.resolved}</h3>
-                <p>Resolved</p>
-              </div>
-              <div class="stat-box">
-                <h3>${reportData.summary.resolutionRate}</h3>
-                <p>Resolution Rate</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <h2>Village-wise Performance</h2>
-            <table>
-              <tr>
-                <th>Village</th>
-                <th>Total Complaints</th>
-                <th>Resolved</th>
-                <th>Resolution Rate</th>
-              </tr>
-              ${reportData.villageWiseData.map(v => `
-                <tr>
-                  <td>${v.village}</td>
-                  <td>${v.complaints}</td>
-                  <td>${v.resolved}</td>
-                  <td>${Math.round((v.resolved / v.complaints) * 100)}%</td>
-                </tr>
-              `).join('')}
-            </table>
-          </div>
-          
-          <div class="section">
-            <h2>Top Issues</h2>
-            <table>
-              <tr>
-                <th>Issue Category</th>
-                <th>Count</th>
-                <th>Percentage</th>
-              </tr>
-              ${reportData.topIssues.map(issue => `
-                <tr>
-                  <td>${issue.category}</td>
-                  <td>${issue.count}</td>
-                  <td>${Math.round((issue.count / reportData.summary.totalComplaints) * 100)}%</td>
-                </tr>
-              `).join('')}
-            </table>
-          </div>
-          
-          <div class="section">
-            <h2>Recommendations</h2>
-            <ul>
-              <li>Increase focus on pothole repairs in Village A</li>
-              <li>Improve response time for water supply issues</li>
-              <li>Conduct sanitation awareness programs</li>
-              <li>Hire additional staff for high-complaint areas</li>
-            </ul>
-          </div>
-          
-          <div class="footer" style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd;">
-            <p>Generated by Rural e-Governance System</p>
-            <p>Confidential - For Official Use Only</p>
-          </div>
-        </body>
-      </html>
-    `;
+    const pdfContent = `<html><head><title>${reportData.title}</title><style>body{font-family:Arial,sans-serif;margin:40px}h1{color:#2563eb}.header{border-bottom:2px solid #2563eb;padding-bottom:20px;margin-bottom:30px}.section{margin-bottom:25px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:12px;text-align:left}th{background-color:#f3f4f6}.stats{display:flex;justify-content:space-between;margin-top:20px}.stat-box{flex:1;text-align:center;padding:15px;background:#f8fafc;margin:0 10px}</style></head><body><div class="header"><h1>${reportData.title}</h1><p><strong>Generated:</strong> ${reportData.date}</p><p><strong>Officer:</strong> ${reportData.officer}</p></div><div class="section"><h2>Executive Summary</h2><div class="stats"><div class="stat-box"><h3>${reportData.summary.totalComplaints}</h3><p>Total Complaints</p></div><div class="stat-box"><h3>${reportData.summary.resolved}</h3><p>Resolved</p></div><div class="stat-box"><h3>${reportData.summary.resolutionRate}</h3><p>Resolution Rate</p></div></div></div><div class="section"><h2>Village-wise Performance</h2><table><tr><th>Village</th><th>Total Complaints</th><th>Resolved</th><th>Resolution Rate</th></tr>${reportData.villageWiseData.map(v => `<tr><td>${v.village}</td><td>${v.complaints}</td><td>${v.resolved}</td><td>${Math.round((v.resolved/v.complaints)*100)}%</td></tr>`).join('')}</table></div><div class="section"><h2>Top Issues</h2><table><tr><th>Issue Category</th><th>Count</th><th>Percentage</th></tr>${reportData.topIssues.map(i => `<tr><td>${i.category}</td><td>${i.count}</td><td>${Math.round((i.count/reportData.summary.totalComplaints)*100)}%</td></tr>`).join('')}</table></div><div class="footer" style="margin-top:50px;padding-top:20px;border-top:1px solid #ddd"><p>Generated by Rural e-Governance System</p><p>Confidential - For Official Use Only</p></div></body></html>`;
 
-    // Create PDF using browser print
     const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(pdfContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
+    if (printWindow) { printWindow.document.write(pdfContent); printWindow.document.close(); printWindow.print(); }
 
-    // Add to reports list
     const newReport: ReportData = {
       id: Date.now().toString(),
       title: `${type} Report`,
-      type: type as any,
+      type: type.toLowerCase() as any,
       generatedDate: new Date().toISOString().split('T')[0],
       period: new Date().toLocaleDateString(),
       size: '~2.5 MB',
       downloadUrl: '#'
     };
-    
     setReports(prev => [newReport, ...prev]);
-    
-    alert(`${type} report generated successfully!`);
+    setTimeout(() => setGenerating(null), 800);
   };
 
+  const filteredReports = reports.filter(r => filters.type === 'all' || r.type === filters.type);
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-          <p className="text-gray-600">Generate and download official reports</p>
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => generatePDFReport('Daily')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-          >
-            <FileText className="h-5 w-5 mr-2" />
-            Generate Report
-          </button>
-        </div>
-      </div>
+    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: '#f8fafc', minHeight: '100vh', color: '#0f172a' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; }
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Reports Generated</p>
-              <p className="text-3xl font-bold mt-2">24</p>
-            </div>
-            <FileText className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">This Month</p>
-              <p className="text-3xl font-bold mt-2">8</p>
-            </div>
-            <Calendar className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total Size</p>
-              <p className="text-3xl font-bold mt-2">48 MB</p>
-            </div>
-            <Download className="h-8 w-8 text-purple-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Avg. Generated</p>
-              <p className="text-3xl font-bold mt-2">3/day</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-orange-600" />
-          </div>
-        </div>
-      </div>
+        .card { background: #fff; border: 1px solid #e8edf3; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+        .card:hover { box-shadow: 0 10px 40px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #dde3ec; }
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <Filter className="h-5 w-5 text-gray-500" />
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({...filters, type: e.target.value})}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-            >
+        .metric-card { background: #fff; border: 1px solid #e8edf3; border-radius: 20px; padding: 24px 28px; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .metric-card:hover { box-shadow: 0 16px 50px rgba(0,0,0,0.09); transform: translateY(-3px); border-color: #dde3ec; }
+
+        .report-card { background: #fff; border: 1px solid #e8edf3; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .report-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.09); transform: translateY(-2px); border-color: #dde3ec; }
+
+        .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; }
+
+        .select-field { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; color: #374151; padding: 9px 36px 9px 14px; font-size: 14px; font-family: inherit; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: border-color 0.2s; }
+        .select-field:hover { border-color: #cbd5e1; }
+        .select-field:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+        .btn-primary { background: #0f172a; border: 1px solid #0f172a; color: #fff; padding: 9px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: all 0.2s; box-shadow: 0 1px 3px rgba(15,23,42,0.2); }
+        .btn-primary:hover { background: #1e293b; box-shadow: 0 4px 12px rgba(15,23,42,0.25); }
+
+        .btn-secondary { background: #fff; border: 1px solid #e2e8f0; color: #374151; padding: 9px 16px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+        .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 9px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; flex: 1; }
+        .icon-btn-outline { background: #fff; border: 1px solid #e8edf3; color: #64748b; }
+        .icon-btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
+        .icon-btn-solid { background: #0f172a; border: 1px solid #0f172a; color: #fff; }
+        .icon-btn-solid:hover { background: #1e293b; }
+
+        .gen-card { background: #fff; border: 1px solid #e8edf3; border-radius: 14px; padding: 22px; text-align: center; cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+        .gen-card:hover { box-shadow: 0 12px 36px rgba(0,0,0,0.1); transform: translateY(-3px); border-color: #dde3ec; }
+        .gen-card:active { transform: translateY(-1px); }
+
+        .gen-card-loading { opacity: 0.6; pointer-events: none; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeUp 0.45s cubic-bezier(0.4,0,0.2,1) both; }
+        .stagger-1 { animation-delay: 0.06s; }
+        .stagger-2 { animation-delay: 0.12s; }
+        .stagger-3 { animation-delay: 0.18s; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+        .progress-bar { height: 4px; border-radius: 100px; background: #f1f5f9; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 100px; }
+      `}</style>
+
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 32px' }}>
+
+        {/* Header */}
+        <div className="animate-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px' }}>
+          <div>
+            <div className="section-label" style={{ marginBottom: '8px' }}>District Administration Portal</div>
+            <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: '30px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.025em' }}>
+              Reports
+            </h1>
+            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '6px' }}>
+              Generate, download and share official reports
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn-secondary" onClick={() => {}}>
+              <Download size={15} />
+              Export All
+            </button>
+            <button className="btn-primary" onClick={() => generatePDFReport('Daily')}>
+              <FileText size={15} />
+              Generate Report
+            </button>
+          </div>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="animate-in stagger-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          {[
+            { label: 'Total Generated', value: '24', sub: '+3 this week', icon: <FileText size={18} />, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', strip: '#3b82f6' },
+            { label: 'This Month', value: '8', sub: '2 scheduled', icon: <Calendar size={18} />, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', strip: '#22c55e' },
+            { label: 'Total Size', value: '48 MB', sub: 'Across all reports', icon: <HardDrive size={18} />, color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe', strip: '#8b5cf6' },
+            { label: 'Avg. Daily', value: '3/day', sub: '+0.5 vs last month', icon: <TrendingUp size={18} />, color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', strip: '#f97316' },
+          ].map((m, i) => (
+            <div key={m.label} className="metric-card" style={{ animationDelay: `${i * 0.06}s` }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${m.strip}88, ${m.strip})` }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{m.label}</span>
+                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: m.bg, border: `1px solid ${m.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color }}>
+                  {m.icon}
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Sora', sans-serif", fontSize: '32px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '12px' }}>
+                {m.value}
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '100px', background: m.bg, color: m.color, border: `1px solid ${m.border}`, fontSize: '12px', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>
+                <ArrowUpRight size={11} />
+                {m.sub}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters Bar */}
+        <div className="animate-in stagger-2 card" style={{ padding: '18px 24px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+              <Filter size={14} />
+            </div>
+            <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className="select-field">
               <option value="all">All Report Types</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="custom">Custom</option>
             </select>
-            
-            <select
-              value={filters.dateRange}
-              onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-            >
+            <select value={filters.dateRange} onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })} className="select-field">
               <option value="week">Last 7 days</option>
               <option value="month">Last 30 days</option>
               <option value="quarter">Last 90 days</option>
               <option value="year">Last Year</option>
             </select>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              Export All
-            </button>
-            <button 
-              onClick={() => generatePDFReport('Custom')}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#94a3b8', alignSelf: 'center', fontFamily: 'JetBrains Mono, monospace' }}>
+              {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+            </span>
+            <button className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => generatePDFReport('Custom')}>
               Custom Report
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reports.map((report) => (
-          <div key={report.id} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      report.type === 'daily' ? 'bg-blue-100 text-blue-800' :
-                      report.type === 'weekly' ? 'bg-green-100 text-green-800' :
-                      report.type === 'monthly' ? 'bg-purple-100 text-purple-800' :
-                      'bg-orange-100 text-orange-800'
-                    }`}>
-                      {report.type.toUpperCase()}
+        {/* Report Cards Grid */}
+        <div className="animate-in stagger-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          {filteredReports.map((report, i) => {
+            const tc = typeConfig[report.type];
+            return (
+              <div key={report.id} className="report-card" style={{ animationDelay: `${i * 0.05}s` }}>
+                {/* Top accent strip */}
+                <div style={{ height: '3px', background: `linear-gradient(90deg, ${tc.color}88, ${tc.color})` }} />
+
+                <div style={{ padding: '22px' }}>
+                  {/* Title row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: tc.bg, border: `1px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: tc.color, flexShrink: 0 }}>
+                        <FileText size={17} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>{report.title}</h3>
+                        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0', fontFamily: 'JetBrains Mono, monospace' }}>{report.period}</p>
+                      </div>
+                    </div>
+                    <span className="badge" style={{ background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`, flexShrink: 0 }}>
+                      {tc.label}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">Period: {report.period}</p>
+
+                  {/* Meta */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '12px' }}>
+                      <Clock size={12} />
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{report.generatedDate}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '12px' }}>
+                      <HardDrive size={12} />
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{report.size}</span>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                    <button className="icon-btn icon-btn-outline">
+                      <Eye size={14} /> Preview
+                    </button>
+                    <button className="icon-btn icon-btn-solid">
+                      <Download size={14} /> Download
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button className="icon-btn icon-btn-outline">
+                      <Printer size={14} /> Print
+                    </button>
+                    <button className="icon-btn icon-btn-outline">
+                      <Share2 size={14} /> Share
+                    </button>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
-                <span>Generated: {report.generatedDate}</span>
-                <span>{report.size}</span>
+            );
+          })}
+        </div>
+
+        {/* Generate New Report Section */}
+        <div className="card animate-in stagger-3" style={{ padding: '28px', marginBottom: '24px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <div className="section-label" style={{ marginBottom: '4px' }}>Quick Actions</div>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Generate New Report</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            {[
+              { type: 'Daily', icon: <Calendar size={26} />, desc: "Today's complaints & status", color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+              { type: 'Weekly', icon: <TrendingUp size={26} />, desc: 'Week performance analysis', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+              { type: 'Monthly', icon: <BarChart3 size={26} />, desc: 'Detailed monthly analysis', color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+              { type: 'Village', icon: <MapPin size={26} />, desc: 'Village-wise performance', color: '#ea580c', bg: '#fff7ed', border: '#fed7aa' },
+            ].map((item) => (
+              <button
+                key={item.type}
+                className={`gen-card${generating === item.type ? ' gen-card-loading' : ''}`}
+                onClick={() => generatePDFReport(item.type)}
+              >
+                {/* Subtle top strip */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, ${item.color}55, ${item.color}aa)` }} />
+
+                <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: item.bg, border: `1px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, margin: '0 auto 14px' }}>
+                  {generating === item.type ? <div className="spinner" style={{ color: item.color }} /> : item.icon}
+                </div>
+                <p style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontSize: '14px' }}>{item.type} Report</p>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 14px', lineHeight: 1.4 }}>{item.desc}</p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600, color: item.color, fontFamily: 'JetBrains Mono, monospace' }}>
+                  Generate <ChevronRight size={12} />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Insights Banner */}
+        <div style={{ background: 'linear-gradient(135deg, #fafbff 0%, #f5f3ff 100%)', border: '1px solid #e0e7ff', borderRadius: '20px', padding: '24px 28px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eef2ff', border: '1px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
+                <Zap size={19} />
               </div>
-              
-              <div className="flex space-x-2 mt-6 pt-4 border-t">
-                <button className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </button>
-                <button className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </button>
-              </div>
-              
-              <div className="flex space-x-2 mt-3">
-                <button className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </button>
-                <button className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </button>
+              <div>
+                <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Smart Report Scheduling</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '3px 0 0' }}>
+                  Based on your usage, reports are best generated every Monday 8 AM and on the 1st of each month.
+                </p>
               </div>
             </div>
+            <button className="btn-primary" style={{ background: '#6366f1', borderColor: '#6366f1', whiteSpace: 'nowrap' }}>
+              Set Schedule
+              <ChevronRight size={14} />
+            </button>
           </div>
-        ))}
-      </div>
-
-      {/* Report Generation Options */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Generate New Report</h2>
-        <div className="grid md:grid-cols-4 gap-4">
-          <button
-            onClick={() => generatePDFReport('Daily')}
-            className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
-          >
-            <Calendar className="h-8 w-8 mx-auto text-blue-600 mb-2" />
-            <p className="font-medium">Daily Report</p>
-            <p className="text-sm text-gray-600">Today's complaints & status</p>
-          </button>
-          
-          <button
-            onClick={() => generatePDFReport('Weekly')}
-            className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
-          >
-            <TrendingUp className="h-8 w-8 mx-auto text-green-600 mb-2" />
-            <p className="font-medium">Weekly Report</p>
-            <p className="text-sm text-gray-600">Week performance analysis</p>
-          </button>
-          
-          <button
-            onClick={() => generatePDFReport('Monthly')}
-            className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
-          >
-            <BarChart3 className="h-8 w-8 mx-auto text-purple-600 mb-2" />
-            <p className="font-medium">Monthly Report</p>
-            <p className="text-sm text-gray-600">Detailed monthly analysis</p>
-          </button>
-          
-          <button
-            onClick={() => generatePDFReport('Village')}
-            className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
-          >
-            <MapPin className="h-8 w-8 mx-auto text-orange-600 mb-2" />
-            <p className="font-medium">Village Report</p>
-            <p className="text-sm text-gray-600">Village-wise performance</p>
-          </button>
         </div>
+
       </div>
     </div>
   );
