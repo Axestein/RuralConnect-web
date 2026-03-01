@@ -8,9 +8,8 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen">
+        {/* <div className="flex justify-between items-center mb-8">
           <Link
             href="/"
             className="flex items-center text-gray-600 hover:text-gray-900"
@@ -25,12 +24,11 @@ export default function AuthLayout({
             <Home className="h-5 w-5 mr-2" />
             Rural e-Governance
           </Link>
-        </div>
+        </div> */}
         
-        <div className="max-w-md mx-auto">
+        <div className="container max-w mx-auto">
           {children}
         </div>
-      </div>
     </div>
   );
 }

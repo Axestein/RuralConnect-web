@@ -1,849 +1,1013 @@
-// src/app/(auth)/login/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff,
-  Smartphone,
-  User,
-  ShieldCheck,
-  Building2,
-  Users,
-  Leaf,
-  Flower,
-  Landmark,
-  Home as HomeIcon,
-  Key,
-  Fingerprint,
-  Sprout,
-  Palette
-} from 'lucide-react';
+import { Eye, EyeOff, Fingerprint, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+
+// ─── Inline SVG Art Components ──────────────────────────────────────────────
+
+const MandalaCorner = ({ className = '' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="0" cy="0" r="80" stroke="#C9A84C" strokeWidth="0.6" strokeDasharray="4 3" fill="none" opacity="0.5"/>
+    <circle cx="0" cy="0" r="60" stroke="#C9A84C" strokeWidth="0.8" fill="none" opacity="0.6"/>
+    <circle cx="0" cy="0" r="40" stroke="#E2C97E" strokeWidth="1" fill="none" opacity="0.7"/>
+    <circle cx="0" cy="0" r="20" stroke="#E2C97E" strokeWidth="1.5" fill="none" opacity="0.8"/>
+    {[0,15,30,45,60,75].map((angle, i) => (
+      <line key={i} x1="0" y1="0" x2={Math.cos((angle*Math.PI)/180)*80} y2={Math.sin((angle*Math.PI)/180)*80}
+        stroke="#C9A84C" strokeWidth="0.5" opacity="0.4"/>
+    ))}
+    {[0,30,60].map((angle, i) => (
+      <ellipse key={i} cx={Math.cos(((angle+15)*Math.PI)/180)*50} cy={Math.sin(((angle+15)*Math.PI)/180)*50}
+        rx="8" ry="4" fill="#C9A84C" opacity="0.3"
+        transform={`rotate(${angle+15} ${Math.cos(((angle+15)*Math.PI)/180)*50} ${Math.sin(((angle+15)*Math.PI)/180)*50})`}/>
+    ))}
+  </svg>
+);
+
+const LotusIcon = () => (
+  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    {/* Outer petals */}
+    {[0,45,90,135,180,225,270,315].map((angle, i) => (
+      <ellipse key={i} cx="40" cy="40" rx="7" ry="18" fill="#C9A84C" opacity="0.6"
+        transform={`rotate(${angle} 40 40) translate(0 -12)`}/>
+    ))}
+    {/* Inner petals */}
+    {[22.5,67.5,112.5,157.5,202.5,247.5,292.5,337.5].map((angle, i) => (
+      <ellipse key={i} cx="40" cy="40" rx="5" ry="13" fill="#E2C97E" opacity="0.8"
+        transform={`rotate(${angle} 40 40) translate(0 -10)`}/>
+    ))}
+    <circle cx="40" cy="40" r="10" fill="#C9A84C" opacity="0.9"/>
+    <circle cx="40" cy="40" r="6" fill="#E2C97E"/>
+    <circle cx="40" cy="40" r="3" fill="#7B3F00"/>
+  </svg>
+);
+
+const PeacockFeather = ({ className = '' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 60 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 180 Q32 120 35 80 Q45 40 42 10" stroke="#1B5E20" strokeWidth="2" fill="none"/>
+    <path d="M30 180 Q28 120 25 80 Q15 40 18 10" stroke="#1B5E20" strokeWidth="1.5" fill="none"/>
+    {[30,50,70,90,110].map((y, i) => (
+      <ellipse key={i} cx={30 + (i%2===0?3:-3)} cy={y} rx={18-i*2} ry={12-i*1.5}
+        fill="none" stroke="#388E3C" strokeWidth="1" opacity={0.8-i*0.1}/>
+    ))}
+    <ellipse cx="35" cy="20" rx="12" ry="18" fill="#0D47A1" opacity="0.6"/>
+    <ellipse cx="35" cy="20" rx="8" ry="12" fill="#1565C0" opacity="0.7"/>
+    <ellipse cx="35" cy="20" rx="5" ry="8" fill="#42A5F5" opacity="0.8"/>
+    <circle cx="35" cy="18" r="4" fill="#0D47A1" opacity="0.9"/>
+    <circle cx="35" cy="18" r="2" fill="#E3F2FD"/>
+  </svg>
+);
+
+const WarliDancer = ({ className = '' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="8" r="5" fill="#F5E6C8"/>
+    <line x1="20" y1="13" x2="20" y2="32" stroke="#F5E6C8" strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="20" y1="32" x2="8" y2="48" stroke="#F5E6C8" strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="20" y1="32" x2="32" y2="48" stroke="#F5E6C8" strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="20" y1="19" x2="5" y2="26" stroke="#F5E6C8" strokeWidth="2" strokeLinecap="round"/>
+    <line x1="20" y1="19" x2="35" y2="14" stroke="#F5E6C8" strokeWidth="2" strokeLinecap="round"/>
+    <polygon points="20,32 10,24 30,24" fill="#F5E6C8" opacity="0.7"/>
+  </svg>
+);
+
+const BorderPattern = () => (
+  <svg viewBox="0 0 400 20" className="w-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    {Array.from({length: 20}).map((_, i) => (
+      <g key={i} transform={`translate(${i*20} 0)`}>
+        <polygon points="10,2 18,10 10,18 2,10" fill="none" stroke="#C9A84C" strokeWidth="0.8" opacity="0.8"/>
+        <circle cx="10" cy="10" r="2" fill="#C9A84C" opacity="0.6"/>
+      </g>
+    ))}
+  </svg>
+);
+
+const GondPattern = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    {/* Gond art: dots and dashes forming tree/nature motif */}
+    <g opacity="0.12" fill="#7B3F00">
+      {/* Tree trunk */}
+      <rect x="95" y="120" width="10" height="60" rx="5"/>
+      {/* Branches */}
+      {[[-30,-20,20,-40],[30,-20,-20,-40],[-15,-40,10,-55],[15,-40,-10,-55]].map(([x1,y1,x2,y2],i)=>(
+        <line key={i} x1={100+x1} y1={120+y1} x2={100+x2} y2={120+y2} stroke="#7B3F00" strokeWidth="4" strokeLinecap="round"/>
+      ))}
+      {/* Dots/leaves pattern */}
+      {[[-35,-25],[35,-25],[-20,-45],[20,-45],[-50,-10],[50,-10],[0,-60],[-10,-75],[10,-75]].map(([x,y],i)=>(
+        <circle key={i} cx={100+x} cy={120+y} r={5-i*0.3} fill="#388E3C"/>
+      ))}
+      {/* Ground dots */}
+      {Array.from({length:12}).map((_,i)=>(
+        <circle key={i} cx={40+i*12} cy={185} r="3" fill="#8B4513" opacity="0.6"/>
+      ))}
+    </g>
+  </svg>
+);
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get('role') || 'citizen';
-  
+  const role = searchParams?.get('role') || 'citizen';
+
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: role
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [activeTab, setActiveTab] = useState(role);
 
-  const roleDetails = {
-    citizen: {
-      title: 'नागरिक प्रवेश',
-      subtitle: 'Citizen Login',
-      icon: Users,
-      bgColor: 'from-emerald-100 to-teal-50',
-      borderColor: 'border-emerald-200',
-      iconColor: 'text-emerald-600',
-      description: 'सेवा याचिका, योजनाएँ, और शिक्षण सामग्री तक पहुँच'
-    },
-    officer: {
-      title: 'अधिकारी प्रवेश',
-      subtitle: 'Officer Login',
-      icon: ShieldCheck,
-      bgColor: 'from-blue-100 to-indigo-50',
-      borderColor: 'border-blue-200',
-      iconColor: 'text-blue-600',
-      description: 'शिकायत प्रबंधन और सरकारी योजनाएँ'
-    },
-    admin: {
-      title: 'प्रशासक प्रवेश',
-      subtitle: 'Admin Login',
-      icon: Building2,
-      bgColor: 'from-purple-100 to-violet-50',
-      borderColor: 'border-purple-200',
-      iconColor: 'text-purple-600',
-      description: 'सिस्टम प्रशासन और निगरानी'
-    }
+  const roles = {
+    citizen: { hindi: 'नागरिक', english: 'Citizen', color: '#E65100', light: '#FFF3E0' },
+    officer: { hindi: 'अधिकारी', english: 'Officer', color: '#1A237E', light: '#E8EAF6' },
+    admin:   { hindi: 'प्रशासक', english: 'Admin',   color: '#4A148C', light: '#F3E5F5' },
   };
-
-  const currentRole = roleDetails[role as keyof typeof roleDetails] || roleDetails.citizen;
-  const RoleIcon = currentRole.icon;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
-    
-    switch(role) {
-      case 'citizen':
-        router.push('/citizen/dashboard');
-        break;
-      case 'officer':
-        router.push('/officer/dashboard');
-        break;
-      case 'admin':
-        router.push('/admin/dashboard');
-        break;
-      default:
-        router.push('/citizen/dashboard');
-    }
-  };
-
-  const handleRoleChange = (newRole: string) => {
-    router.push(`/login?role=${newRole}`);
+    router.push(`/${activeTab}/dashboard`);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-emerald-50 relative overflow-hidden">
-      {/* Heritage Background Patterns */}
-      <div className="absolute inset-0 opacity-5">
-        {/* Warli Art Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTUwIDI1QzI1IDI1IDI1IDUwIDI1IDUwczAgMjUgMjUgMjUgMjUtMjUgMjUtMjVTNzUgMjUgNTAgMjV6IiBmaWxsPSJub25lIiBzdHJva2U9IiMxNjczMzAiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMjUiIHI9IjIiIGZpbGw9IiMxNjczMzAiLz48Y2lyY2xlIGN4PSI3NSIgY3k9IjUwIiByPSIyIiBmaWxsPSIjMTY3MzMwIi8+PC9zdmc+')]"></div>
-        {/* Madhubani Border Pattern */}
-        <div className="absolute top-0 left-0 right-0 h-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDEwIGMxMC00IDIwLTggMzAtMTAgczIwIDIgMzAgMTBjMTAgOCAyMCAxMiAzMCAxMCAxMCAyIDIwLTQgMzAtMTAgMTAtNiAyMC04IDMwLTEwIDEwLTIgMjAgMCAzMCA0IDEwIDQgMjAgMTAgMzAgMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE2NzMzMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=')]"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDEwIGMxMC02IDIwLTEwIDMwLTEwIDEwIDAgMjAgNCAzMCAxMCAxMCA2IDIwIDEwIDMwIDEwIDEwIDAgMjAtNCAzMC0xMCAxMC02IDIwLTEwIDMwLTEwIDEwIDAgMjAgNCAzMCAxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTY3MzMwIiBzdHJva2Utd2lkdGg9IjAuNSIvPjwvc3ZnPg==')]"></div>
-      </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Yatra+One&family=Tiro+Devanagari+Hindi:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 
-      {/* Traditional Indian Motifs */}
-      <div className="absolute top-4 left-4 opacity-10">
-        <Flower className="h-32 w-32 text-emerald-800" />
-      </div>
-      <div className="absolute bottom-4 right-4 opacity-10">
-        <Palette className="h-32 w-32 text-amber-800" />
-      </div>
+        :root {
+          --gold: #C9A84C;
+          --gold-light: #E2C97E;
+          --gold-deep: #8B6914;
+          --saffron: #FF6F00;
+          --vermilion: #C62828;
+          --ivory: #FDF8EE;
+          --parchment: #F5E6C8;
+          --bark: #3E2723;
+          --ink: #1A0A00;
+          --jade: #1B5E20;
+        }
 
-      <div className="container mx-auto px-4 py-12 relative">
-        {/* Header with Heritage Design */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-emerald-600 rounded-full blur-md opacity-50"></div>
-              <div className="relative bg-gradient-to-br from-amber-100 to-emerald-50 p-3 rounded-full shadow-lg border border-amber-200">
-                <Landmark className="h-8 w-8 text-emerald-700" />
-              </div>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: 'Lora', serif;
+          background: var(--ivory);
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        .page-wrapper {
+          min-height: 100vh;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          position: relative;
+        }
+
+        /* ── Left Panel ── */
+        .left-panel {
+          background: linear-gradient(160deg, #1a0a00 0%, #3E2723 40%, #4E342E 70%, #5D4037 100%);
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 2.5rem;
+        }
+
+        .left-panel::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse at 20% 30%, rgba(201,168,76,0.15) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 70%, rgba(198,40,40,0.1) 0%, transparent 60%);
+        }
+
+        /* Tanjore gold texture overlay */
+        .gold-texture {
+          position: absolute;
+          inset: 0;
+          background-image:
+            url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C9A84C' fill-opacity='0.05'%3E%3Cpath d='M5 0h1L0 6V5z'/%3E%3Cpath d='M6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .mandala-bg {
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.08;
+          animation: slowRotate 60s linear infinite;
+        }
+
+        @keyframes slowRotate {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .left-content {
+          position: relative;
+          z-index: 2;
+          text-align: center;
+        }
+
+        .portal-title {
+          font-family: 'Cinzel Decorative', cursive;
+          font-size: 1.8rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #E2C97E 0%, #C9A84C 40%, #FFD700 70%, #C9A84C 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1.3;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.5rem;
+        }
+
+        .portal-hindi {
+          font-family: 'Tiro Devanagari Hindi', serif;
+          font-size: 2.2rem;
+          color: #E2C97E;
+          margin-bottom: 0.25rem;
+          text-shadow: 0 0 20px rgba(201,168,76,0.4);
+        }
+
+        .portal-sub {
+          font-family: 'Lora', serif;
+          font-style: italic;
+          font-size: 0.85rem;
+          color: rgba(226,201,126,0.7);
+          letter-spacing: 0.15em;
+          margin-bottom: 2.5rem;
+        }
+
+        .lotus-container {
+          width: 120px;
+          height: 120px;
+          margin: 0 auto 2rem;
+          position: relative;
+        }
+
+        .lotus-glow {
+          position: absolute;
+          inset: -20px;
+          background: radial-gradient(circle, rgba(201,168,76,0.3) 0%, transparent 70%);
+          animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .divider-gold {
+          width: 200px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #C9A84C, transparent);
+          margin: 1.5rem auto;
+        }
+
+        .warli-row {
+          display: flex;
+          justify-content: center;
+          gap: 1.5rem;
+          margin: 1.5rem 0;
+          opacity: 0.6;
+        }
+
+        .peacock-row {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+          margin-top: 1.5rem;
+        }
+
+        .feature-pills {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 2rem;
+        }
+
+        .feature-pill {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.6rem 1.2rem;
+          background: rgba(201,168,76,0.1);
+          border: 1px solid rgba(201,168,76,0.25);
+          border-radius: 50px;
+          color: rgba(226,201,126,0.9);
+          font-size: 0.8rem;
+          font-family: 'Lora', serif;
+        }
+
+        .feature-pill-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #C9A84C;
+          flex-shrink: 0;
+        }
+
+        /* ── Pattachitra corner borders ── */
+        .corner-tl, .corner-tr, .corner-bl, .corner-br {
+          position: absolute;
+          width: 100px;
+          height: 100px;
+          overflow: hidden;
+          z-index: 3;
+        }
+        .corner-tl { top: 0; left: 0; }
+        .corner-tr { top: 0; right: 0; transform: scaleX(-1); }
+        .corner-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+        .corner-br { bottom: 0; right: 0; transform: scale(-1); }
+
+        /* ── Right Panel ── */
+        .right-panel {
+          background: var(--ivory);
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          overflow: hidden;
+        }
+
+        .right-panel::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image:
+            url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C9A84C' fill-opacity='0.04'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3Ccircle cx='0' cy='0' r='1'/%3E%3Ccircle cx='40' cy='0' r='1'/%3E%3Ccircle cx='0' cy='40' r='1'/%3E%3Ccircle cx='40' cy='40' r='1'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .gond-bg {
+          position: absolute;
+          inset: 0;
+          opacity: 1;
+          pointer-events: none;
+        }
+
+        .login-card {
+          position: relative;
+          width: 100%;
+          max-width: 460px;
+          z-index: 2;
+        }
+
+        /* Tanjore-style ornate frame */
+        .tanjore-frame {
+          position: relative;
+          background: #FFFEF8;
+          border: 2px solid #C9A84C;
+          border-radius: 4px;
+          box-shadow:
+            0 0 0 6px #FDF8EE,
+            0 0 0 8px rgba(201,168,76,0.3),
+            0 0 0 10px #FDF8EE,
+            0 0 0 12px rgba(201,168,76,0.15),
+            0 20px 60px rgba(62,39,35,0.2);
+        }
+
+        .frame-top-border, .frame-bottom-border {
+          height: 16px;
+          background: linear-gradient(90deg, #8B6914, #C9A84C, #E2C97E, #C9A84C, #8B6914);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .frame-top-border::after, .frame-bottom-border::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='2' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+        }
+
+        .frame-inner {
+          padding: 2rem 2.5rem 2.5rem;
+        }
+
+        .frame-corner-ornament {
+          position: absolute;
+          width: 28px;
+          height: 28px;
+          background: #C9A84C;
+          z-index: 5;
+        }
+        .frame-corner-ornament.tl { top: -2px; left: -2px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+        .frame-corner-ornament.tr { top: -2px; right: -2px; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+        .frame-corner-ornament.bl { bottom: -2px; left: -2px; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+        .frame-corner-ornament.br { bottom: -2px; right: -2px; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+        .form-header {
+          text-align: center;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid rgba(201,168,76,0.3);
+          position: relative;
+        }
+
+        .form-header::after {
+          content: '◆';
+          position: absolute;
+          bottom: -9px;
+          left: 50%;
+          transform: translateX(-50%);
+          color: #C9A84C;
+          font-size: 0.8rem;
+          background: #FFFEF8;
+          padding: 0 0.5rem;
+        }
+
+        .form-title-hindi {
+          font-family: 'Tiro Devanagari Hindi', serif;
+          font-size: 1.7rem;
+          color: var(--bark);
+          line-height: 1.2;
+        }
+
+        .form-title-eng {
+          font-family: 'Cinzel Decorative', cursive;
+          font-size: 0.8rem;
+          color: var(--gold);
+          letter-spacing: 0.2em;
+          margin-top: 0.25rem;
+        }
+
+        /* Role Tabs */
+        .role-tabs {
+          display: flex;
+          background: rgba(201,168,76,0.08);
+          border: 1px solid rgba(201,168,76,0.2);
+          border-radius: 4px;
+          padding: 4px;
+          margin-bottom: 1.5rem;
+          gap: 4px;
+        }
+
+        .role-tab {
+          flex: 1;
+          padding: 0.6rem 0.5rem;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 3px;
+          transition: all 0.3s ease;
+          text-align: center;
+        }
+
+        .role-tab.active {
+          background: linear-gradient(135deg, #8B6914, #C9A84C);
+          box-shadow: 0 2px 8px rgba(139,105,20,0.4);
+        }
+
+        .role-tab-hindi {
+          font-family: 'Tiro Devanagari Hindi', serif;
+          font-size: 0.85rem;
+          color: #7B3F00;
+          display: block;
+        }
+
+        .role-tab.active .role-tab-hindi { color: #FFF8E1; }
+
+        .role-tab-eng {
+          font-family: 'Lora', serif;
+          font-size: 0.65rem;
+          font-style: italic;
+          color: rgba(123,63,0,0.6);
+          display: block;
+        }
+
+        .role-tab.active .role-tab-eng { color: rgba(255,248,225,0.8); }
+
+        /* Form Fields */
+        .field-group {
+          margin-bottom: 1.25rem;
+        }
+
+        .field-label {
+          display: flex;
+          align-items: baseline;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .label-hindi {
+          font-family: 'Tiro Devanagari Hindi', serif;
+          font-size: 0.9rem;
+          color: #4E342E;
+        }
+
+        .label-eng {
+          font-family: 'Lora', serif;
+          font-size: 0.7rem;
+          font-style: italic;
+          color: #8D6E63;
+        }
+
+        .input-wrapper {
+          position: relative;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #C9A84C;
+          font-size: 1rem;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 0.75rem 1rem 0.75rem 2.5rem;
+          border: 1.5px solid rgba(201,168,76,0.4);
+          border-radius: 3px;
+          background: rgba(253,248,238,0.8);
+          font-family: 'Lora', serif;
+          font-size: 0.9rem;
+          color: var(--bark);
+          outline: none;
+          transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder { color: #BCAAA4; font-style: italic; }
+
+        .form-input:focus {
+          border-color: #C9A84C;
+          background: #FFFEF8;
+          box-shadow: 0 0 0 3px rgba(201,168,76,0.1), 0 0 0 1px rgba(201,168,76,0.3);
+        }
+
+        .eye-btn {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #A1887F;
+          padding: 4px;
+          transition: color 0.2s;
+        }
+
+        .eye-btn:hover { color: #C9A84C; }
+
+        .form-footer-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .remember-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+
+        .custom-checkbox {
+          width: 16px;
+          height: 16px;
+          border: 1.5px solid #C9A84C;
+          border-radius: 2px;
+          background: rgba(201,168,76,0.1);
+          appearance: none;
+          cursor: pointer;
+          position: relative;
+        }
+
+        .custom-checkbox:checked::after {
+          content: '✓';
+          position: absolute;
+          top: -2px;
+          left: 2px;
+          font-size: 11px;
+          color: #8B6914;
+          font-weight: bold;
+        }
+
+        .remember-text {
+          font-family: 'Lora', serif;
+          font-size: 0.78rem;
+          color: #6D4C41;
+        }
+
+        .forgot-link {
+          font-family: 'Lora', serif;
+          font-style: italic;
+          font-size: 0.78rem;
+          color: #C9A84C;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+
+        .forgot-link:hover { color: #8B6914; }
+
+        /* Submit Button */
+        .submit-btn {
+          width: 100%;
+          padding: 0.9rem;
+          background: linear-gradient(135deg, #8B6914 0%, #C9A84C 40%, #E2C97E 60%, #C9A84C 80%, #8B6914 100%);
+          border: none;
+          border-radius: 3px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(139,105,20,0.4);
+          margin-bottom: 1.25rem;
+        }
+
+        .submit-btn::before {
+          content: '';
+          position: absolute;
+          inset: 1px;
+          background: linear-gradient(135deg, #9B7A24, #D4A836);
+          border-radius: 2px;
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+
+        .submit-btn:hover::before { opacity: 1; }
+        .submit-btn:hover { box-shadow: 0 6px 20px rgba(139,105,20,0.6); transform: translateY(-1px); }
+
+        .submit-btn-text {
+          position: relative;
+          font-family: 'Cinzel Decorative', cursive;
+          font-size: 0.9rem;
+          color: var(--ink);
+          letter-spacing: 0.1em;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+        }
+
+        .btn-ornament { color: #4E2B00; font-size: 0.7rem; }
+
+        .signup-row {
+          text-align: center;
+          margin-bottom: 1.25rem;
+        }
+
+        .signup-text {
+          font-family: 'Lora', serif;
+          font-size: 0.8rem;
+          color: #8D6E63;
+        }
+
+        .signup-link {
+          color: #C9A84C;
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+
+        .signup-link:hover { color: #8B6914; }
+
+        /* Divider */
+        .or-divider {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin: 1.25rem 0;
+        }
+
+        .or-line {
+          flex: 1;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+        }
+
+        .or-text {
+          font-family: 'Tiro Devanagari Hindi', serif;
+          font-size: 0.75rem;
+          color: #A1887F;
+          white-space: nowrap;
+        }
+
+        /* Alt Login Buttons */
+        .alt-buttons {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .alt-btn {
+          padding: 0.6rem;
+          border: 1.5px solid rgba(201,168,76,0.3);
+          border-radius: 3px;
+          background: rgba(253,248,238,0.5);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .alt-btn:hover {
+          border-color: #C9A84C;
+          background: rgba(201,168,76,0.08);
+          box-shadow: 0 2px 8px rgba(201,168,76,0.2);
+        }
+
+        .alt-btn-text {
+          font-family: 'Lora', serif;
+          font-size: 0.78rem;
+          color: #5D4037;
+        }
+
+        .alt-btn-sub {
+          font-style: italic;
+          font-size: 0.65rem;
+          color: #A1887F;
+        }
+
+        /* Security note */
+        .security-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.6rem;
+          padding: 0.75rem 1rem;
+          background: linear-gradient(135deg, rgba(201,168,76,0.05), rgba(27,94,32,0.05));
+          border: 1px solid rgba(201,168,76,0.2);
+          border-radius: 3px;
+          border-left: 3px solid #C9A84C;
+        }
+
+        .security-icon { color: #C9A84C; flex-shrink: 0; margin-top: 2px; }
+
+        .security-text {
+          font-family: 'Lora', serif;
+          font-size: 0.72rem;
+          color: #6D4C41;
+          line-height: 1.6;
+        }
+
+        .security-text strong { color: #4E342E; }
+
+        /* Bottom footer */
+        .page-footer {
+          text-align: center;
+          margin-top: 1.5rem;
+        }
+
+        .footer-text {
+          font-family: 'Lora', serif;
+          font-style: italic;
+          font-size: 0.72rem;
+          color: #A1887F;
+        }
+
+        .footer-flag {
+          font-size: 1rem;
+          margin: 0 0.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .page-wrapper {
+            grid-template-columns: 1fr;
+          }
+          .left-panel {
+            padding: 2rem 1.5rem;
+            min-height: auto;
+          }
+          .portal-title { font-size: 1.3rem; }
+          .portal-hindi { font-size: 1.7rem; }
+          .peacock-row, .warli-row { display: none; }
+          .feature-pills { display: none; }
+        }
+      `}</style>
+
+      <div className="page-wrapper">
+        {/* ── LEFT PANEL ── */}
+        <div className="left-panel">
+          <div className="gold-texture" />
+
+          {/* Mandala BG */}
+          <svg className="mandala-bg" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {[20,40,60,80,100,120,140,160,180,200].map((r,i) => (
+              <circle key={i} cx="200" cy="200" r={r} stroke="#C9A84C" strokeWidth={i%3===0?1:0.5}
+                strokeDasharray={i%2===0?"8 4":"4 8"} opacity={0.6-i*0.04}/>
+            ))}
+            {Array.from({length:12}).map((_,i)=>(
+              <line key={i} x1="200" y1="200" x2={200+Math.cos((i*30*Math.PI)/180)*200}
+                y2={200+Math.sin((i*30*Math.PI)/180)*200} stroke="#C9A84C" strokeWidth="0.5" opacity="0.3"/>
+            ))}
+            {[60,90,120,150].map((r,i)=>(
+              Array.from({length:12}).map((_,j)=>(
+                <circle key={`${i}-${j}`}
+                  cx={200+Math.cos((j*30*Math.PI)/180)*r}
+                  cy={200+Math.sin((j*30*Math.PI)/180)*r}
+                  r={3-i*0.5} fill="#C9A84C" opacity={0.4-i*0.07}/>
+              ))
+            ))}
+          </svg>
+
+          {/* Corner ornaments */}
+          <div className="corner-tl"><MandalaCorner className="w-full h-full" /></div>
+          <div className="corner-tr"><MandalaCorner className="w-full h-full" /></div>
+          <div className="corner-bl"><MandalaCorner className="w-full h-full" /></div>
+          <div className="corner-br"><MandalaCorner className="w-full h-full" /></div>
+
+          <div className="left-content">
+            {/* Lotus */}
+            <div className="lotus-container">
+              <div className="lotus-glow" />
+              <LotusIcon />
             </div>
-            <div className="ml-4 text-left">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-700 to-emerald-800 bg-clip-text text-transparent">
-                ग्राम ई-सेवा
-              </h1>
-              <p className="text-xs text-gray-600">Rural e-Governance Portal</p>
+
+            <div className="divider-gold" />
+
+            <h1 className="portal-hindi">ग्राम ई-सेवा</h1>
+            <h2 className="portal-title">Gram e-Seva</h2>
+            <p className="portal-sub">Rural e-Governance Portal</p>
+
+            <div className="divider-gold" />
+
+            {/* Warli Dancers */}
+            <div className="warli-row">
+              {[0,1,2,3,4].map(i=>(
+                <WarliDancer key={i} className={`w-8 h-12 ${i%2===0?'':'scale-x-[-1]'}`} />
+              ))}
+            </div>
+
+            {/* Peacock feathers */}
+            <div className="peacock-row">
+              <PeacockFeather className="w-10 h-28 opacity-70" />
+              <PeacockFeather className="w-10 h-32 opacity-90" />
+              <PeacockFeather className="w-10 h-28 opacity-70" style={{transform:'scaleX(-1)'}} />
+            </div>
+
+            {/* Feature pills */}
+            <div className="feature-pills">
+              {[
+                'सेवा याचिका / Service Requests',
+                'सरकारी योजनाएँ / Government Schemes',
+                'शिकायत प्रबंधन / Grievance Portal',
+                'डिजिटल दस्तावेज़ / Digital Documents',
+              ].map((text, i) => (
+                <div key={i} className="feature-pill">
+                  <div className="feature-pill-dot" />
+                  <span>{text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="max-w-md mx-auto">
-          {/* Login Container with Traditional Border */}
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border-2 border-amber-100">
-            {/* Decorative Top Border - Traditional Rangoli Pattern */}
-            <div className="h-2 bg-gradient-to-r from-amber-500 via-emerald-500 to-amber-500 relative">
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMiIgdmlld0JveD0iMCAwIDIwIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxIiByPSIwLjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNSIvPjwvc3ZnPg==')]"></div>
-            </div>
+        {/* ── RIGHT PANEL ── */}
+        <div className="right-panel">
+          <div className="gond-bg">
+            <GondPattern />
+          </div>
 
-            <div className="p-8">
-              {/* Role Selection with Traditional Tabs */}
-              <div className="flex mb-8 border-b-2 border-amber-100">
-                {Object.entries(roleDetails).map(([key, details]) => {
-                  const Icon = details.icon;
-                  const isActive = role === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => handleRoleChange(key)}
-                      className={`flex-1 py-4 flex flex-col items-center transition-all duration-300 relative ${
-                        isActive 
-                          ? `text-emerald-700 ${details.bgColor}` 
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-amber-50'
-                      } rounded-t-lg`}
-                    >
-                      {isActive && (
-                        <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-emerald-500"></div>
-                      )}
-                      <Icon className={`h-6 w-6 mb-2 ${isActive ? details.iconColor : 'text-gray-400'}`} />
-                      <span className="text-sm font-medium capitalize">
-                        {key === 'citizen' ? 'नागरिक' : key === 'officer' ? 'अधिकारी' : 'प्रशासक'}
-                      </span>
-                    </button>
-                  );
-                })}
+          <div className="login-card">
+            <div className="tanjore-frame">
+              <div className="frame-corner-ornament tl" />
+              <div className="frame-corner-ornament tr" />
+              <div className="frame-corner-ornament bl" />
+              <div className="frame-corner-ornament br" />
+
+              <div className="frame-top-border">
+                <BorderPattern />
               </div>
 
-              {/* Role Header with Traditional Indian Design */}
-              <div className="text-center mb-8 relative">
-                <div className={`inline-flex p-4 rounded-2xl ${currentRole.bgColor} border ${currentRole.borderColor} shadow-lg mb-4 relative`}>
-                  <div className="absolute -top-2 -right-2">
-                    <Sprout className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <RoleIcon className={`h-10 w-10 ${currentRole.iconColor}`} />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1 font-serif">
-                  {currentRole.title}
-                </h1>
-                <p className="text-sm text-emerald-700 font-medium mb-2">
-                  {currentRole.subtitle}
-                </p>
-                <p className="text-gray-600 text-sm">
-                  {currentRole.description}
-                </p>
-              </div>
-
-              {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-serif">
-                    <span className="text-emerald-700">ईमेल पता</span>
-                    <span className="text-gray-500 ml-2">/ Email Address</span>
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                      <Mail className="h-5 w-5 text-amber-500 group-focus-within:text-emerald-600 transition-colors" />
-                    </div>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full pl-10 pr-4 py-3 border border-amber-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-amber-50/50 transition-all duration-300"
-                      placeholder="अपना ईमेल दर्ज करें / Enter your email"
-                    />
-                  </div>
+              <div className="frame-inner">
+                {/* Header */}
+                <div className="form-header">
+                  <div className="form-title-hindi">प्रवेश करें</div>
+                  <div className="form-title-eng">◈ ENTER THE PORTAL ◈</div>
                 </div>
 
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-serif">
-                    <span className="text-emerald-700">पासवर्ड</span>
-                    <span className="text-gray-500 ml-2">/ Password</span>
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                      <Key className="h-5 w-5 text-amber-500 group-focus-within:text-emerald-600 transition-colors" />
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="w-full pl-10 pr-12 py-3 border border-amber-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-amber-50/50 transition-all duration-300"
-                      placeholder="अपना पासवर्ड दर्ज करें / Enter your password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-amber-100 transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-amber-600" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-amber-600" />
-                      )}
+                {/* Role Tabs */}
+                <div className="role-tabs">
+                  {Object.entries(roles).map(([key, val]) => (
+                    <button key={key} className={`role-tab ${activeTab===key?'active':''}`}
+                      onClick={() => setActiveTab(key)}>
+                      <span className="role-tab-hindi">{val.hindi}</span>
+                      <span className="role-tab-eng">{val.english}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
 
-                {role === 'citizen' && (
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-serif">
-                      <span className="text-emerald-700">मोबाइल नंबर (वैकल्पिक)</span>
-                      <span className="text-gray-500 ml-2">/ Mobile Number (Optional)</span>
+                {/* Form */}
+                <form onSubmit={handleSubmit}>
+                  <div className="field-group">
+                    <div className="field-label">
+                      <span className="label-hindi">ईमेल पता</span>
+                      <span className="label-eng">/ Email Address</span>
+                    </div>
+                    <div className="input-wrapper">
+                      <span className="input-icon">✉</span>
+                      <input type="email" required className="form-input"
+                        value={formData.email}
+                        onChange={e => setFormData({...formData, email: e.target.value})}
+                        placeholder="अपना ईमेल दर्ज करें" />
+                    </div>
+                  </div>
+
+                  <div className="field-group">
+                    <div className="field-label">
+                      <span className="label-hindi">पासवर्ड</span>
+                      <span className="label-eng">/ Password</span>
+                    </div>
+                    <div className="input-wrapper">
+                      <span className="input-icon">🗝</span>
+                      <input type={showPassword ? 'text' : 'password'} required
+                        className="form-input" style={{paddingRight:'2.5rem'}}
+                        value={formData.password}
+                        onChange={e => setFormData({...formData, password: e.target.value})}
+                        placeholder="पासवर्ड दर्ज करें" />
+                      <button type="button" className="eye-btn" onClick={()=>setShowPassword(!showPassword)}>
+                        {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-footer-row">
+                    <label className="remember-label">
+                      <input type="checkbox" className="custom-checkbox" />
+                      <span className="remember-text">मुझे याद रखें</span>
                     </label>
-                    <div className="relative group">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <Smartphone className="h-5 w-5 text-amber-500 group-focus-within:text-emerald-600 transition-colors" />
-                      </div>
-                      <input
-                        type="tel"
-                        className="w-full pl-10 pr-4 py-3 border border-amber-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-amber-50/50 transition-all duration-300"
-                        placeholder="मोबाइल नंबर दर्ज करें / Enter mobile number"
-                      />
-                    </div>
+                    <Link href="/forgot-password" className="forgot-link">
+                      पासवर्ड भूल गए?
+                    </Link>
                   </div>
-                )}
 
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                      />
-                      <div className="w-5 h-5 border border-amber-300 rounded-md bg-amber-50 group-hover:bg-amber-100 transition-colors flex items-center justify-center">
-                        <div className="hidden group-has-[:checked]:block w-3 h-3 bg-emerald-600 rounded-sm"></div>
-                      </div>
-                    </div>
-                    <span className="ml-2 text-sm text-gray-600 font-serif">
-                      मुझे याद रखें / Remember me
+                  <button type="submit" className="submit-btn">
+                    <span className="submit-btn-text">
+                      <span className="btn-ornament">◈</span>
+                      प्रवेश करें · Sign In
+                      <span className="btn-ornament">◈</span>
                     </span>
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-emerald-600 hover:text-emerald-800 font-serif transition-colors"
-                  >
-                    पासवर्ड भूल गए? / Forgot password?
-                  </Link>
+                  </button>
+                </form>
+
+                <div className="signup-row">
+                  <span className="signup-text">
+                    खाता नहीं है?{' '}
+                    <Link href={`/register?role=${activeTab}`} className="signup-link">
+                      पंजीकरण करें / Register
+                    </Link>
+                  </span>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span className="relative font-serif text-lg">
-                    प्रवेश करें / Sign In
-                  </span>
-                </button>
+                <div className="or-divider">
+                  <div className="or-line" />
+                  <span className="or-text">या इसके साथ / Or with</span>
+                  <div className="or-line" />
+                </div>
 
-                <div className="text-center">
-                  <p className="text-gray-600 text-sm font-serif">
-                    खाता नहीं है?{' '}
-                    <Link
-                      href={`/register?role=${role}`}
-                      className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors"
-                    >
-                      यहाँ पंजीकरण करें / Sign up here
-                    </Link>
+                <div className="alt-buttons">
+                  <button className="alt-btn">
+                    <Fingerprint size={18} color="#1565C0" />
+                    <div>
+                      <div className="alt-btn-text">आधार</div>
+                      <div className="alt-btn-sub">Aadhaar</div>
+                    </div>
+                  </button>
+                  <button className="alt-btn">
+                    <ShieldCheck size={18} color="#2E7D32" />
+                    <div>
+                      <div className="alt-btn-text">डिजी लॉकर</div>
+                      <div className="alt-btn-sub">DigiLocker</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="security-note">
+                  <ShieldCheck size={14} className="security-icon" />
+                  <p className="security-text">
+                    <strong>सुरक्षा नोट:</strong> आपका डेटा सुरक्षित है।{' '}
+                    We adhere strictly to Indian digital privacy policies &amp; IT Act 2000.
                   </p>
                 </div>
+              </div>
 
-                {/* Traditional Divider */}
-                <div className="relative my-8">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-amber-200"></div>
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span className="px-4 bg-white text-amber-600 text-sm font-serif">
-                      या इसके साथ जारी रखें / Or continue with
-                    </span>
-                  </div>
-                </div>
-
-                {/* Indian Digital Identity Options */}
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    className="flex items-center justify-center py-3.5 border border-amber-200 rounded-xl hover:bg-amber-50 transition-all duration-300 group relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center">
-                      <div className="p-1.5 bg-blue-100 rounded-lg mr-3">
-                        <Fingerprint className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <span className="font-medium text-gray-700 font-serif">आधार / Aadhaar</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center py-3.5 border border-amber-200 rounded-xl hover:bg-amber-50 transition-all duration-300 group relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center">
-                      <div className="p-1.5 bg-green-100 rounded-lg mr-3">
-                        <ShieldCheck className="h-5 w-5 text-green-600" />
-                      </div>
-                      <span className="font-medium text-gray-700 font-serif">डिजी लॉकर / DigiLocker</span>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Security Note */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-emerald-50 rounded-xl border border-amber-100">
-                  <div className="flex items-center">
-                    <ShieldCheck className="h-5 w-5 text-emerald-600 mr-2 flex-shrink-0" />
-                    <p className="text-xs text-gray-600 font-serif">
-                      <span className="font-medium text-emerald-700">सुरक्षा नोट: </span>
-                      आपका डेटा सुरक्षित है। हम भारतीय डिजिटल गोपनीयता नीतियों का कड़ाई से पालन करते हैं।
-                      <br />
-                      <span className="font-medium text-emerald-700">Security Note: </span>
-                      Your data is secure. We strictly adhere to Indian digital privacy policies.
-                    </p>
-                  </div>
-                </div>
-              </form>
+              <div className="frame-bottom-border" />
             </div>
 
-            {/* Decorative Bottom Border */}
-            <div className="h-4 bg-gradient-to-r from-amber-500 via-emerald-500 to-amber-500 opacity-20"></div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500 font-serif">
-              🇮🇳 एक डिजिटल भारत पहल / A Digital India Initiative
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              ग्रामीण विकास मंत्रालय / Ministry of Rural Development
-            </p>
+            <div className="page-footer">
+              <p className="footer-text">
+                <span className="footer-flag">🇮🇳</span>
+                एक डिजिटल भारत पहल · A Digital India Initiative
+                <span className="footer-flag">🇮🇳</span>
+              </p>
+              <p className="footer-text" style={{marginTop:'0.25rem', opacity:0.7}}>
+                ग्रामीण विकास मंत्रालय · Ministry of Rural Development
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-
-// // src/app/(auth)/login/page.tsx
-// 'use client';
-
-// import { useState, useEffect } from 'react';
-// import { useRouter, useSearchParams } from 'next/navigation';
-// import { 
-//   Mail, 
-//   Lock, 
-//   Eye, 
-//   EyeOff,
-//   Smartphone,
-//   User,
-//   ShieldCheck,
-//   Building2,
-//   Users,
-//   Leaf
-// } from 'lucide-react';
-// import Link from 'next/link';
-
-// export default function LoginPage() {
-//   const router = useRouter();
-//   const searchParams = useSearchParams();
-//   const role = searchParams.get('role') || 'citizen';
-  
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [formData, setFormData] = useState({
-//     email: '',
-//     password: '',
-//     role: role
-//   });
-
-//   const roleDetails = {
-//     citizen: {
-//       title: 'Citizen Login',
-//       icon: Users,
-//       bgColor: 'from-amber-50 to-orange-50',
-//       borderColor: 'border-orange-200',
-//       iconColor: 'text-orange-700',
-//       description: 'Access services, schemes, and resources'
-//     },
-//     officer: {
-//       title: 'Officer Login',
-//       icon: ShieldCheck,
-//       bgColor: 'from-blue-50 to-indigo-100',
-//       borderColor: 'border-indigo-300',
-//       iconColor: 'text-indigo-700',
-//       description: 'Manage grievances and government schemes'
-//     },
-//     admin: {
-//       title: 'Admin Login',
-//       icon: Building2,
-//       bgColor: 'from-purple-50 to-violet-100',
-//       borderColor: 'border-purple-300',
-//       iconColor: 'text-purple-700',
-//       description: 'System administration and monitoring'
-//     }
-//   };
-
-//   const currentRole = roleDetails[role as keyof typeof roleDetails] || roleDetails.citizen;
-//   const RoleIcon = currentRole.icon;
-
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     console.log('Login attempt:', formData);
-    
-//     switch(role) {
-//       case 'citizen':
-//         router.push('/citizen/dashboard');
-//         break;
-//       case 'officer':
-//         router.push('/officer/dashboard');
-//         break;
-//       case 'admin':
-//         router.push('/admin/dashboard');
-//         break;
-//       default:
-//         router.push('/citizen/dashboard');
-//     }
-//   };
-
-//   const handleRoleChange = (newRole: string) => {
-//     router.push(`/login?role=${newRole}`);
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
-//       {/* Warli Art Pattern Background */}
-//       <div className="absolute inset-0 opacity-[0.03]">
-//         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-//           <defs>
-//             <pattern id="warli-pattern" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
-//               {/* Simple stick figures in Warli style */}
-//               <circle cx="30" cy="30" r="4" fill="#8B4513" />
-//               <line x1="30" y1="34" x2="30" y2="50" stroke="#8B4513" strokeWidth="1.5" />
-//               <line x1="30" y1="50" x2="20" y2="65" stroke="#8B4513" strokeWidth="1.5" />
-//               <line x1="30" y1="50" x2="40" y2="65" stroke="#8B4513" strokeWidth="1.5" />
-//               <line x1="30" y1="40" x2="20" y2="45" stroke="#8B4513" strokeWidth="1.5" />
-//               <line x1="30" y1="40" x2="40" y2="45" stroke="#8B4513" strokeWidth="1.5" />
-              
-//               {/* Triangle shapes */}
-//               <polygon points="70,20 80,40 60,40" fill="none" stroke="#8B4513" strokeWidth="1.5" />
-//               <polygon points="90,50 100,70 80,70" fill="none" stroke="#8B4513" strokeWidth="1.5" />
-//             </pattern>
-//           </defs>
-//           <rect width="100%" height="100%" fill="url(#warli-pattern)" />
-//         </svg>
-//       </div>
-
-//       {/* Madhubani Border Patterns */}
-//       <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 opacity-60">
-//         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-//           <pattern id="madhubani-top" x="0" y="0" width="40" height="12" patternUnits="userSpaceOnUse">
-//             <circle cx="20" cy="6" r="2" fill="#FFF5E1" opacity="0.7" />
-//             <circle cx="10" cy="6" r="1.5" fill="#FFF5E1" opacity="0.5" />
-//             <circle cx="30" cy="6" r="1.5" fill="#FFF5E1" opacity="0.5" />
-//           </pattern>
-//           <rect width="100%" height="100%" fill="url(#madhubani-top)" />
-//         </svg>
-//       </div>
-
-//       {/* Traditional Paisley Corner Motifs */}
-//       <div className="absolute top-8 left-8 w-32 h-32 opacity-10">
-//         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-//           <path d="M50,10 Q70,20 70,40 Q70,60 50,70 Q40,60 40,40 Q40,20 50,10 Z" 
-//                 fill="none" stroke="#A0522D" strokeWidth="2" />
-//           <circle cx="55" cy="35" r="3" fill="#A0522D" />
-//           <circle cx="50" cy="45" r="2" fill="#A0522D" />
-//           <circle cx="55" cy="55" r="2.5" fill="#A0522D" />
-//         </svg>
-//       </div>
-
-//       <div className="absolute bottom-8 right-8 w-32 h-32 opacity-10 transform rotate-180">
-//         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-//           <path d="M50,10 Q70,20 70,40 Q70,60 50,70 Q40,60 40,40 Q40,20 50,10 Z" 
-//                 fill="none" stroke="#A0522D" strokeWidth="2" />
-//           <circle cx="55" cy="35" r="3" fill="#A0522D" />
-//           <circle cx="50" cy="45" r="2" fill="#A0522D" />
-//           <circle cx="55" cy="55" r="2.5" fill="#A0522D" />
-//         </svg>
-//       </div>
-
-//       {/* Lotus Flower Motifs */}
-//       <div className="absolute top-1/4 right-16 w-24 h-24 opacity-[0.08]">
-//         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(45 50 50)" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(90 50 50)" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(135 50 50)" />
-//           <circle cx="50" cy="50" r="8" fill="#D2691E" />
-//         </svg>
-//       </div>
-
-//       <div className="absolute bottom-1/4 left-16 w-24 h-24 opacity-[0.08]">
-//         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(45 50 50)" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(90 50 50)" />
-//           <ellipse cx="50" cy="50" rx="15" ry="35" fill="#CD853F" transform="rotate(135 50 50)" />
-//           <circle cx="50" cy="50" r="8" fill="#D2691E" />
-//         </svg>
-//       </div>
-
-//       <div className="container mx-auto px-4 py-12 relative z-10">
-//         {/* Header */}
-//         <div className="text-center mb-8">
-//           <div className="inline-flex items-center justify-center mb-6">
-//             <div className="relative">
-//               <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-500 rounded-full blur-md opacity-40"></div>
-//               <div className="relative bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-100 p-4 rounded-full shadow-xl border-2 border-orange-300">
-//                 {/* Traditional Diya/Lamp icon */}
-//                 <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-//                   <path d="M12 2L14 8H10L12 2Z" fill="#D2691E" />
-//                   <ellipse cx="12" cy="10" rx="8" ry="3" fill="#CD853F" />
-//                   <path d="M4 10C4 10 4 14 12 14C20 14 20 10 20 10" stroke="#8B4513" strokeWidth="1.5" fill="none" />
-//                   <circle cx="12" cy="10" r="1.5" fill="#FF6347" />
-//                 </svg>
-//               </div>
-//             </div>
-//             <div className="ml-4 text-left">
-//               <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-700 via-red-700 to-amber-800 bg-clip-text text-transparent">
-//                 Gram e-Seva
-//               </h1>
-//               <p className="text-sm text-gray-600 tracking-wide">Rural e-Governance Portal</p>
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="max-w-md mx-auto">
-//           {/* Login Container with Traditional Border */}
-//           <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden">
-//             {/* Decorative Top Border - Rangoli Pattern */}
-//             <div className="h-3 bg-gradient-to-r from-orange-500 via-red-600 to-orange-500 relative">
-//               <svg className="w-full h-full absolute inset-0" xmlns="http://www.w3.org/2000/svg">
-//                 <pattern id="rangoli-dots" x="0" y="0" width="20" height="12" patternUnits="userSpaceOnUse">
-//                   <circle cx="10" cy="6" r="1.5" fill="rgba(255,255,255,0.6)" />
-//                 </pattern>
-//                 <rect width="100%" height="100%" fill="url(#rangoli-dots)" />
-//               </svg>
-//             </div>
-
-//             {/* Pattachitra-inspired side borders */}
-//             <div className="absolute left-0 top-12 bottom-12 w-1 bg-gradient-to-b from-orange-400 via-red-500 to-orange-400 opacity-40"></div>
-//             <div className="absolute right-0 top-12 bottom-12 w-1 bg-gradient-to-b from-orange-400 via-red-500 to-orange-400 opacity-40"></div>
-
-//             <div className="p-8">
-//               {/* Role Selection Tabs */}
-//               <div className="flex mb-8 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-1 border border-orange-200">
-//                 {Object.entries(roleDetails).map(([key, details]) => {
-//                   const Icon = details.icon;
-//                   const isActive = role === key;
-//                   return (
-//                     <button
-//                       key={key}
-//                       onClick={() => handleRoleChange(key)}
-//                       className={`flex-1 py-3 px-2 flex flex-col items-center transition-all duration-300 rounded-lg relative ${
-//                         isActive 
-//                           ? 'bg-white shadow-md text-orange-800' 
-//                           : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-//                       }`}
-//                     >
-//                       <Icon className={`h-5 w-5 mb-1 ${isActive ? details.iconColor : 'text-gray-400'}`} />
-//                       <span className="text-xs font-medium capitalize">
-//                         {key}
-//                       </span>
-//                     </button>
-//                   );
-//                 })}
-//               </div>
-
-//               {/* Role Header */}
-//               <div className="text-center mb-8">
-//                 <div className={`inline-flex p-4 rounded-2xl ${currentRole.bgColor} border-2 ${currentRole.borderColor} shadow-lg mb-4 relative`}>
-//                   {/* Corner decorations */}
-//                   <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-orange-600 rounded-tl-lg"></div>
-//                   <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-orange-600 rounded-tr-lg"></div>
-//                   <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-orange-600 rounded-bl-lg"></div>
-//                   <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-orange-600 rounded-br-lg"></div>
-                  
-//                   <RoleIcon className={`h-12 w-12 ${currentRole.iconColor}`} />
-//                 </div>
-//                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-//                   {currentRole.title}
-//                 </h1>
-//                 <p className="text-gray-600 text-sm">
-//                   {currentRole.description}
-//                 </p>
-//               </div>
-
-//               {/* Login Form */}
-//               <form onSubmit={handleSubmit} className="space-y-5">
-//                 {/* Email Field */}
-//                 <div className="relative">
-//                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                     Email Address
-//                   </label>
-//                   <div className="relative group">
-//                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-//                       <Mail className="h-5 w-5 text-orange-500 group-focus-within:text-red-600 transition-colors" />
-//                     </div>
-//                     {/* Traditional corner motif on focus */}
-//                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-full"></div>
-//                     <input
-//                       type="email"
-//                       required
-//                       value={formData.email}
-//                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-//                       className="w-full pl-11 pr-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-gradient-to-r from-orange-50/30 to-amber-50/30 transition-all duration-300 placeholder:text-gray-400"
-//                       placeholder="Enter your email"
-//                     />
-//                   </div>
-//                 </div>
-
-//                 {/* Password Field */}
-//                 <div className="relative">
-//                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                     Password
-//                   </label>
-//                   <div className="relative group">
-//                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-//                       <Lock className="h-5 w-5 text-orange-500 group-focus-within:text-red-600 transition-colors" />
-//                     </div>
-//                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-full"></div>
-//                     <input
-//                       type={showPassword ? "text" : "password"}
-//                       required
-//                       value={formData.password}
-//                       onChange={(e) => setFormData({...formData, password: e.target.value})}
-//                       className="w-full pl-11 pr-12 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-gradient-to-r from-orange-50/30 to-amber-50/30 transition-all duration-300 placeholder:text-gray-400"
-//                       placeholder="Enter your password"
-//                     />
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowPassword(!showPassword)}
-//                       className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-lg hover:bg-orange-100 transition-colors"
-//                     >
-//                       {showPassword ? (
-//                         <EyeOff className="h-5 w-5 text-gray-500 hover:text-orange-700" />
-//                       ) : (
-//                         <Eye className="h-5 w-5 text-gray-500 hover:text-orange-700" />
-//                       )}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* Mobile Number (Citizens only) */}
-//                 {role === 'citizen' && (
-//                   <div className="relative">
-//                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                       Mobile Number <span className="text-gray-500 text-xs">(Optional)</span>
-//                     </label>
-//                     <div className="relative group">
-//                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-//                         <Smartphone className="h-5 w-5 text-orange-500 group-focus-within:text-red-600 transition-colors" />
-//                       </div>
-//                       <input
-//                         type="tel"
-//                         className="w-full pl-11 pr-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-gradient-to-r from-orange-50/30 to-amber-50/30 transition-all duration-300 placeholder:text-gray-400"
-//                         placeholder="Enter mobile number"
-//                       />
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {/* Remember Me & Forgot Password */}
-//                 <div className="flex items-center justify-between">
-//                   <label className="flex items-center cursor-pointer group">
-//                     <input
-//                       type="checkbox"
-//                       className="w-4 h-4 text-orange-600 bg-orange-50 border-orange-300 rounded focus:ring-orange-500 focus:ring-2"
-//                     />
-//                     <span className="ml-2 text-sm text-gray-700">
-//                       Remember me
-//                     </span>
-//                   </label>
-//                   <Link
-//                     href="/forgot-password"
-//                     className="text-sm text-orange-700 hover:text-red-700 font-medium transition-colors underline decoration-orange-300 hover:decoration-red-400"
-//                   >
-//                     Forgot password?
-//                   </Link>
-//                 </div>
-
-//                 {/* Sign In Button */}
-//                 <button
-//                   type="submit"
-//                   className="w-full py-3.5 bg-gradient-to-r from-orange-500 via-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:via-red-700 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-//                 >
-//                   {/* Texture overlay */}
-//                   <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
-//                   <span className="relative text-lg tracking-wide">
-//                     Sign In
-//                   </span>
-//                 </button>
-
-//                 {/* Sign Up Link */}
-//                 <div className="text-center">
-//                   <p className="text-gray-700 text-sm">
-//                     Don't have an account?{' '}
-//                     <Link
-//                       href={`/register?role=${role}`}
-//                       className="text-orange-700 hover:text-red-700 font-semibold transition-colors underline decoration-orange-300"
-//                     >
-//                       Sign up here
-//                     </Link>
-//                   </p>
-//                 </div>
-
-//                 {/* Traditional Divider */}
-//                 <div className="relative my-8">
-//                   <div className="absolute inset-0 flex items-center">
-//                     <div className="w-full border-t-2 border-orange-200"></div>
-//                   </div>
-//                   <div className="relative flex justify-center">
-//                     <span className="px-4 bg-white text-orange-700 text-sm font-medium">
-//                       Or continue with
-//                     </span>
-//                   </div>
-//                 </div>
-
-//                 {/* Indian Digital Identity Options */}
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <button
-//                     type="button"
-//                     className="flex items-center justify-center py-3.5 border-2 border-orange-200 rounded-xl hover:bg-orange-50 transition-all duration-300 group relative overflow-hidden"
-//                   >
-//                     <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-//                     <div className="relative flex items-center">
-//                       <div className="p-1.5 bg-blue-100 rounded-lg mr-2 border border-blue-300">
-//                         <svg className="w-5 h-5 text-blue-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-//                           <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" strokeWidth="2"/>
-//                           <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-//                         </svg>
-//                       </div>
-//                       <span className="font-semibold text-gray-800 text-sm">Aadhaar</span>
-//                     </div>
-//                   </button>
-                  
-//                   <button
-//                     type="button"
-//                     className="flex items-center justify-center py-3.5 border-2 border-orange-200 rounded-xl hover:bg-orange-50 transition-all duration-300 group relative overflow-hidden"
-//                   >
-//                     <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-//                     <div className="relative flex items-center">
-//                       <div className="p-1.5 bg-green-100 rounded-lg mr-2 border border-green-300">
-//                         <ShieldCheck className="h-5 w-5 text-green-700" />
-//                       </div>
-//                       <span className="font-semibold text-gray-800 text-sm">DigiLocker</span>
-//                     </div>
-//                   </button>
-//                 </div>
-
-//                 {/* Security Note with Traditional Border */}
-//                 <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 relative">
-//                   {/* Corner decorations */}
-//                   <div className="absolute top-0 left-0 w-4 h-4">
-//                     <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-//                       <path d="M0 0 L4 0 L0 4 Z" fill="#F97316"/>
-//                     </svg>
-//                   </div>
-//                   <div className="absolute top-0 right-0 w-4 h-4">
-//                     <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-//                       <path d="M16 0 L12 0 L16 4 Z" fill="#F97316"/>
-//                     </svg>
-//                   </div>
-                  
-//                   <div className="flex items-start">
-//                     <ShieldCheck className="h-5 w-5 text-orange-700 mr-3 flex-shrink-0 mt-0.5" />
-//                     <div>
-//                       <p className="text-xs text-gray-700 leading-relaxed">
-//                         <span className="font-bold text-orange-800">Security Note:</span> Your data is secure and protected. 
-//                         We strictly adhere to Indian digital privacy policies and government data protection standards.
-//                       </p>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </form>
-//             </div>
-
-//             {/* Decorative Bottom Border */}
-//             <div className="h-3 bg-gradient-to-r from-orange-500 via-red-600 to-orange-500">
-//               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-//                 <pattern id="bottom-pattern" x="0" y="0" width="30" height="12" patternUnits="userSpaceOnUse">
-//                   <circle cx="15" cy="6" r="1.5" fill="rgba(255,255,255,0.5)" />
-//                   <circle cx="7" cy="6" r="1" fill="rgba(255,255,255,0.3)" />
-//                   <circle cx="23" cy="6" r="1" fill="rgba(255,255,255,0.3)" />
-//                 </pattern>
-//                 <rect width="100%" height="100%" fill="url(#bottom-pattern)" />
-//               </svg>
-//             </div>
-//           </div>
-
-//           {/* Footer */}
-//           <div className="mt-8 text-center space-y-2">
-//             <div className="flex items-center justify-center gap-2">
-//               <Leaf className="w-4 h-4 text-orange-600" />
-//               <p className="text-sm text-gray-700 font-medium">
-//                 A Digital India Initiative
-//               </p>
-//               <Leaf className="w-4 h-4 text-orange-600" />
-//             </div>
-//             <p className="text-xs text-gray-500">
-//               Ministry of Rural Development, Government of India
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
