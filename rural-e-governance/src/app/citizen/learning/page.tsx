@@ -1,98 +1,419 @@
+"use client";
 
-// Learning Portal Page
-// src/app/citizen/learning/page.tsx
-import VideoCard from '@/components/learning/VideoCard';
-import TutorChat from '@/components/learning/TutorChat';
-import { BookOpen } from 'lucide-react';
+import { useState, useRef, useEffect } from "react";
+
+interface Video {
+  id: number;
+  title: string;
+  description: string;
+  duration: string;
+  category: string;
+  categoryColor: string;
+  icon: string;
+  instructor: string;
+  views: string;
+  rating: number;
+  offlineAvailable: boolean;
+  progress: number;
+}
+
+interface DocItem {
+  name: string;
+  type: string;
+  size: string;
+  icon: string;
+  downloads: string;
+  category: string;
+}
+
+interface ChatMessage {
+  role: "user" | "bot";
+  text: string;
+}
+
+const VIDEOS: Video[] = [
+  { id: 1, title: "Basic Digital Literacy", description: "Learn smartphones, apps & internet for daily use", duration: "15:30", category: "Digital", categoryColor: "#3B82F6", icon: "📱", instructor: "Ramesh Kumar", views: "12.4K", rating: 4.8, offlineAvailable: true, progress: 60 },
+  { id: 2, title: "Organic Farming Techniques", description: "Modern organic methods for better yield & soil health", duration: "22:45", category: "Agriculture", categoryColor: "#16A34A", icon: "🌾", instructor: "Dr. Priya Singh", views: "28.1K", rating: 4.9, offlineAvailable: true, progress: 0 },
+  { id: 3, title: "Financial Literacy Basics", description: "Banking, loans, investments & government schemes", duration: "18:20", category: "Finance", categoryColor: "#D97706", icon: "💰", instructor: "Sunil Mehta", views: "9.7K", rating: 4.6, offlineAvailable: false, progress: 30 },
+  { id: 4, title: "Health & Hygiene Practices", description: "Basic healthcare for rural families & communities", duration: "12:15", category: "Health", categoryColor: "#DC2626", icon: "🏥", instructor: "Dr. Anita Rao", views: "15.3K", rating: 4.7, offlineAvailable: true, progress: 100 },
+  { id: 5, title: "Water Conservation", description: "Rainwater harvesting & smart irrigation systems", duration: "20:10", category: "Agriculture", categoryColor: "#16A34A", icon: "💧", instructor: "Vikram Patil", views: "8.2K", rating: 4.5, offlineAvailable: true, progress: 0 },
+  { id: 6, title: "Government Schemes Guide", description: "PM-Kisan, MNREGA, Ayushman Bharat & more", duration: "25:00", category: "Welfare", categoryColor: "#7C3AED", icon: "🏛️", instructor: "IAS Kavita Sharma", views: "31.8K", rating: 4.9, offlineAvailable: true, progress: 0 },
+];
+
+const DOCUMENTS: DocItem[] = [
+  { name: "MNREGA Guidelines", type: "PDF", size: "2.4 MB", icon: "📄", downloads: "45K", category: "Welfare" },
+  { name: "PM-Kisan Application Form", type: "PDF", size: "1.1 MB", icon: "📋", downloads: "82K", category: "Agriculture" },
+  { name: "Soil Health Card Guide", type: "PDF", size: "3.2 MB", icon: "🗺️", downloads: "19K", category: "Agriculture" },
+  { name: "Ayushman Bharat Benefits", type: "PDF", size: "1.8 MB", icon: "💊", downloads: "67K", category: "Health" },
+  { name: "Kisan Credit Card Info", type: "PDF", size: "0.9 MB", icon: "💳", downloads: "23K", category: "Finance" },
+  { name: "Digital Payment Guide", type: "PDF", size: "1.5 MB", icon: "📲", downloads: "34K", category: "Digital" },
+];
+
+const QUICK_QUESTIONS: string[] = [
+  "How do I apply for PM-Kisan?",
+  "What crops are best for Rabi season?",
+  "How to use UPI for payments?",
+  "What is MNREGA job card?",
+];
+
+const BOT_RESPONSES: Record<string, string> = {
+  "How do I apply for PM-Kisan?": "To apply for **PM-Kisan Samman Nidhi**: \n\n1. Visit your nearest **Common Service Centre (CSC)**\n2. Carry your **Aadhaar card**, **bank passbook** & **land records**\n3. The officer will register you on the portal\n4. You can also apply at **pmkisan.gov.in**\n\nOnce approved, **₹2,000** is directly transferred to your bank every 4 months. 🌾",
+  "What crops are best for Rabi season?": "**Best Rabi crops** (Oct–March):\n\n🌾 **Wheat** – Most popular, good returns\n🟡 **Mustard** – Low water, high profit\n🫘 **Chickpea (Chana)** – Good market price\n🧅 **Potato & Onion** – High demand\n🥕 **Vegetables** – Quick harvest cycle\n\nRabi season needs **less water**. Use drip irrigation for best results!",
+  "How to use UPI for payments?": "**UPI Payment Steps:**\n\n1. Download **BHIM** or any UPI app\n2. Link your **bank account**\n3. Set a **4-digit UPI PIN**\n4. To pay: Enter phone number or scan **QR code**\n5. Enter amount → Confirm with PIN\n\n✅ Free to use\n✅ Works 24/7\n✅ Instant transfer\n\nStart with small amounts to practice! 📱",
+  "What is MNREGA job card?": "**MNREGA (Job Card)** gives you the **right to work 100 days/year** guaranteed by government!\n\n📌 **How to get it:**\n- Apply at your **Gram Panchayat**\n- Bring Aadhaar + photo + residence proof\n- Card issued within **15 days**\n\n💰 **Payment:** ₹200–350/day directly to bank\n🏗️ **Work:** Roads, ponds, soil conservation\n\nIt's your **legal right** as a rural worker! 🇮🇳",
+};
 
 export default function LearningPage() {
-  const videos = [
-    {
-      id: 1,
-      title: 'Basic Digital Literacy',
-      description: 'Learn how to use smartphones and basic apps',
-      duration: '15:30',
-      category: 'Digital',
-      offlineAvailable: true
-    },
-    {
-      id: 2,
-      title: 'Organic Farming Techniques',
-      description: 'Modern organic farming methods for better yield',
-      duration: '22:45',
-      category: 'Agriculture',
-      offlineAvailable: true
-    },
-    {
-      id: 3,
-      title: 'Financial Literacy',
-      description: 'Understanding banking, loans, and investments',
-      duration: '18:20',
-      category: 'Finance',
-      offlineAvailable: false
-    },
-    {
-      id: 4,
-      title: 'Health and Hygiene',
-      description: 'Basic healthcare practices for rural areas',
-      duration: '12:15',
-      category: 'Health',
-      offlineAvailable: true
-    }
-  ];
+  const [activeTab, setActiveTab] = useState<string>("videos");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: "bot", text: "नमस्ते! 🙏 I'm your AI Learning Assistant. Ask me anything about farming, government schemes, health, or digital skills!\n\n*Type in Hindi or English — I understand both!*" },
+  ]);
+  const [inputText, setInputText] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [downloadedDocs, setDownloadedDocs] = useState<string[]>([]);
+  const [language, setLanguage] = useState<string>("EN");
 
-  const documents = [
-    { name: 'MNREGA Guidelines PDF', size: '2.4 MB' },
-    { name: 'PM-Kisan Application Form', size: '1.1 MB' },
-    { name: 'Soil Health Card Guide', size: '3.2 MB' },
-    { name: 'Ayushman Bharat Benefits', size: '1.8 MB' }
-  ];
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isTyping]);
+
+  const categories: string[] = ["All", "Agriculture", "Digital", "Finance", "Health", "Welfare"];
+
+  const filteredVideos = VIDEOS.filter((v) => {
+    const matchCat = selectedCategory === "All" || v.category === selectedCategory;
+    const matchSearch =
+      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const sendMessage = async (text?: string): Promise<void> => {
+    const userMsg = text ?? inputText.trim();
+    if (!userMsg) return;
+    setInputText("");
+    setChatMessages((prev) => [...prev, { role: "user", text: userMsg }]);
+    setIsTyping(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    const response =
+      BOT_RESPONSES[userMsg] ??
+      `That's a great question! I'm searching our knowledge base about **"${userMsg}"**...\n\nFor detailed information, please watch our related video lessons or download the relevant PDFs from the Documents section. You can also visit your nearest **Common Service Centre (CSC)** for in-person help. 🙏`;
+    setIsTyping(false);
+    setChatMessages((prev) => [...prev, { role: "bot", text: response }]);
+  };
+
+  const handleDownload = (docName: string): void => {
+    setDownloadedDocs((prev) => [...prev, docName]);
+    setTimeout(() => setDownloadedDocs((prev) => prev.filter((d) => d !== docName)), 3000);
+  };
+
+  const formatBotText = (text: string) => {
+    return text.split("\n").map((line, i) => {
+      const bold = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      const italic = bold.replace(/\*(.*?)\*/g, "<em>$1</em>");
+      return <p key={i} dangerouslySetInnerHTML={{ __html: italic }} style={{ margin: "2px 0", lineHeight: 1.6 }} />;
+    });
+  };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Learning Portal</h1>
-        <p className="text-gray-600">AI Tutor & Offline Learning Materials</p>
-      </div>
+    <div style={{ fontFamily: "'Noto Sans', sans-serif", minHeight: "100vh", background: "linear-gradient(135deg, #f0fdf4 0%, #fefce8 50%, #f0f9ff 100%)" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap');
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #16a34a; border-radius: 3px; }
+        .video-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important; }
+        .video-card { transition: all 0.3s ease; }
+        .doc-row:hover { background: #f0fdf4 !important; }
+        .doc-row { transition: background 0.2s; }
+        .tab-btn { transition: all 0.2s; }
+        .cat-btn { transition: all 0.2s; }
+        .send-btn:hover { transform: scale(1.05); }
+        .quick-q:hover { background: #16a34a !important; color: white !important; transform: translateY(-2px); }
+        .quick-q { transition: all 0.2s; }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+        .dot { display: inline-block; width: 8px; height: 8px; background: #16a34a; border-radius: 50%; margin: 0 2px; animation: typing 1.2s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        .lang-toggle { transition: all 0.2s; }
+        .lang-toggle:hover { opacity: 0.8; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-bubble { animation: fadeIn 0.3s ease; }
+        .progress-bar { background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: 4px; height: 6px; }
+      `}</style>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Video Lessons</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {videos.map((video) => (
-                <VideoCard key={video.id} {...video} />
+      {/* Main Content */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px", display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, alignItems: "start" }}>
+
+        {/* Left Panel */}
+        <div>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: 32, fontWeight: 800, color: "#14532d", margin: 0, lineHeight: 1.1 }}>
+              Learning Portal 
+            </h1>
+            <p style={{ color: "#4b5563", fontSize: 15, margin: "6px 0 0", fontWeight: 500 }}>
+              Video lessons, PDFs & AI Tutor — Learn at your own pace, in your language
+            </p>
+          </div>
+
+          {/* Search */}
+          <div style={{ position: "relative", marginBottom: 20 }}>
+            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 18, zIndex: 1 }}>🔍</span>
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search videos, topics, government schemes..."
+              style={{ width: "100%", padding: "14px 16px 14px 48px", borderRadius: 14, border: "2px solid #d1fae5", background: "white", fontSize: 14, outline: "none", color: "#111827", fontFamily: "inherit" }}
+              onFocus={(e) => (e.target.style.border = "2px solid #16a34a")}
+              onBlur={(e) => (e.target.style.border = "2px solid #d1fae5")}
+            />
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20, background: "white", padding: 6, borderRadius: 14, border: "1px solid #e5e7eb", width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+            {["videos", "documents"].map((tab) => (
+              <button key={tab} className="tab-btn" onClick={() => setActiveTab(tab)} style={{ padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "inherit", background: activeTab === tab ? "linear-gradient(135deg, #15803d, #16a34a)" : "transparent", color: activeTab === tab ? "white" : "#4b5563", boxShadow: activeTab === tab ? "0 4px 12px rgba(21,128,61,0.3)" : "none" }}>
+                {tab === "videos" ? "🎬 Video Lessons" : "📄 Documents"}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "videos" && (
+            <>
+              {/* Category Filter */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                {categories.map((cat) => (
+                  <button key={cat} className="cat-btn" onClick={() => setSelectedCategory(cat)} style={{ padding: "7px 18px", borderRadius: 20, border: `2px solid ${selectedCategory === cat ? "#15803d" : "#e5e7eb"}`, cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit", background: selectedCategory === cat ? "#15803d" : "white", color: selectedCategory === cat ? "white" : "#374151" }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Video Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                {filteredVideos.map((video) => (
+                  <div key={video.id} className="video-card" style={{ background: "white", borderRadius: 18, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.07)", cursor: "pointer", border: "1px solid #f0fdf4" }} onClick={() => setSelectedVideo(video)}>
+                    <div style={{ background: `linear-gradient(135deg, ${video.categoryColor}22, ${video.categoryColor}44)`, height: 140, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", borderBottom: `3px solid ${video.categoryColor}30` }}>
+                      <span style={{ fontSize: 52 }}>{video.icon}</span>
+                      <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.6)", borderRadius: 6, padding: "3px 8px", color: "white", fontSize: 11, fontWeight: 700 }}>
+                        ⏱ {video.duration}
+                      </div>
+                      {video.offlineAvailable && (
+                        <div style={{ position: "absolute", top: 10, left: 10, background: "#15803d", borderRadius: 6, padding: "3px 8px", color: "white", fontSize: 10, fontWeight: 700 }}>
+                          📥 OFFLINE
+                        </div>
+                      )}
+                      <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,0.95)", borderRadius: "50%", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
+                        ▶
+                      </div>
+                    </div>
+                    <div style={{ padding: "14px 16px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <span style={{ background: `${video.categoryColor}20`, color: video.categoryColor, padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700 }}>{video.category}</span>
+                        <span style={{ color: "#f59e0b", fontSize: 11, fontWeight: 700 }}>★ {video.rating}</span>
+                        <span style={{ color: "#9ca3af", fontSize: 11 }}>• {video.views} views</span>
+                      </div>
+                      <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>{video.title}</h3>
+                      <p style={{ margin: "0 0 10px", fontSize: 12, color: "#6b7280", lineHeight: 1.4 }}>{video.description}</p>
+                      <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 10 }}>👨‍🏫 {video.instructor}</div>
+                      {video.progress > 0 ? (
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 600 }}>{video.progress === 100 ? "✅ Completed" : "In Progress"}</span>
+                            <span style={{ fontSize: 11, color: "#15803d", fontWeight: 700 }}>{video.progress}%</span>
+                          </div>
+                          <div style={{ background: "#e5e7eb", borderRadius: 4, height: 6 }}>
+                            <div className="progress-bar" style={{ width: `${video.progress}%` }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <button style={{ width: "100%", padding: "9px", background: "linear-gradient(135deg, #15803d, #16a34a)", border: "none", borderRadius: 10, color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+                          ▶ Start Learning
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === "documents" && (
+            <div style={{ background: "white", borderRadius: 18, boxShadow: "0 4px 16px rgba(0,0,0,0.07)", overflow: "hidden", border: "1px solid #f0fdf4" }}>
+              <div style={{ padding: "18px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#14532d" }}>📋 Downloadable Resources</h2>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6b7280" }}>Official government forms, guides & informational PDFs</p>
+                </div>
+                <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "6px 14px" }}>
+                  <span style={{ fontSize: 13, color: "#15803d", fontWeight: 700 }}>{DOCUMENTS.length} documents</span>
+                </div>
+              </div>
+              {DOCUMENTS.map((doc, i) => (
+                <div key={i} className="doc-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: i < DOCUMENTS.length - 1 ? "1px solid #f9fafb" : "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ width: 46, height: 46, background: "#fef9c3", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>
+                      {doc.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>{doc.name}</div>
+                      <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
+                        <span style={{ background: "#f3f4f6", padding: "1px 7px", borderRadius: 4, marginRight: 6 }}>{doc.type}</span>
+                        {doc.size} • 📥 {doc.downloads} downloads
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 11, background: "#f0fdf4", color: "#15803d", padding: "4px 10px", borderRadius: 8, fontWeight: 600 }}>{doc.category}</span>
+                    <button onClick={() => handleDownload(doc.name)} style={{ padding: "9px 18px", background: downloadedDocs.includes(doc.name) ? "#dcfce7" : "linear-gradient(135deg, #15803d, #16a34a)", border: "none", borderRadius: 10, color: downloadedDocs.includes(doc.name) ? "#15803d" : "white", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", minWidth: 100 }}>
+                      {downloadedDocs.includes(doc.name) ? "✅ Saved!" : "⬇ Download"}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Right Panel — AI Tutor */}
+        <div style={{ position: "sticky", top: 20 }}>
+          <div style={{ background: "white", borderRadius: 20, boxShadow: "0 8px 32px rgba(21,128,61,0.12)", overflow: "hidden", border: "2px solid #d1fae5" }}>
+            {/* Chat Header */}
+            <div style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", padding: "18px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 46, height: 46, background: "rgba(255,255,255,0.2)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🤖</div>
+                <div>
+                  <div style={{ color: "white", fontWeight: 800, fontSize: 16, fontFamily: "'Baloo 2', cursive" }}>AI Tutor Assistant</div>
+                  <div style={{ color: "#a7f3d0", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 7, height: 7, background: "#4ade80", borderRadius: "50%", display: "inline-block" }} />
+                    Online — Hindi & English
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div style={{ height: 340, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12, background: "#fafafa" }}>
+              {chatMessages.map((msg, i) => (
+                <div key={i} className="msg-bubble" style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  {msg.role === "bot" && (
+                    <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #15803d, #16a34a)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, marginRight: 8, flexShrink: 0, alignSelf: "flex-end" }}>🌱</div>
+                  )}
+                  <div style={{ maxWidth: "80%", padding: "12px 14px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: msg.role === "user" ? "linear-gradient(135deg, #15803d, #16a34a)" : "white", color: msg.role === "user" ? "white" : "#111827", fontSize: 13, lineHeight: 1.5, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: msg.role === "bot" ? "1px solid #e5e7eb" : "none" }}>
+                    {formatBotText(msg.text)}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="msg-bubble" style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                  <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #15803d, #16a34a)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🌱</div>
+                  <div style={{ padding: "12px 18px", borderRadius: "18px 18px 18px 4px", background: "white", border: "1px solid #e5e7eb", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                    <span className="dot" /><span className="dot" /><span className="dot" />
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Quick Questions */}
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #f3f4f6", background: "white" }}>
+              <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Quick Questions</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {QUICK_QUESTIONS.map((q, i) => (
+                  <button key={i} className="quick-q" onClick={() => sendMessage(q)} style={{ fontSize: 11, padding: "5px 11px", borderRadius: 20, border: "1.5px solid #d1fae5", background: "#f0fdf4", color: "#15803d", cursor: "pointer", fontWeight: 600, fontFamily: "inherit" }}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Input */}
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #f3f4f6", background: "white", display: "flex", gap: 8 }}>
+              <input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                placeholder="Ask in Hindi or English..."
+                style={{ flex: 1, padding: "11px 14px", borderRadius: 12, border: "2px solid #d1fae5", fontSize: 13, outline: "none", fontFamily: "inherit", color: "#111827" }}
+                onFocus={(e) => (e.target.style.border = "2px solid #15803d")}
+                onBlur={(e) => (e.target.style.border = "2px solid #d1fae5")}
+              />
+              <button className="send-btn" onClick={() => sendMessage()} style={{ width: 44, height: 44, background: "linear-gradient(135deg, #15803d, #16a34a)", border: "none", borderRadius: 12, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(21,128,61,0.3)" }}>
+                🚀
+              </button>
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Downloadable Documents</h2>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <ul className="space-y-3">
-                {documents.map((doc, index) => (
-                  <li key={index} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded">
-                    <div className="flex items-center">
-                      <BookOpen className="h-5 w-5 text-blue-600 mr-3" />
-                      <span>{doc.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm text-gray-500">{doc.size}</span>
-                      <button className="text-blue-600 hover:text-blue-800">
-                        Download
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+          {/* Progress Card */}
+          <div style={{ marginTop: 16, background: "white", borderRadius: 18, padding: "18px", boxShadow: "0 4px 16px rgba(0,0,0,0.07)", border: "1px solid #f0fdf4" }}>
+            <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#14532d" }}>📊 Your Learning Progress</h3>
+            {[
+              { label: "Digital Literacy", pct: 60, color: "#3B82F6" },
+              { label: "Agriculture", pct: 35, color: "#16A34A" },
+              { label: "Government Schemes", pct: 80, color: "#7C3AED" },
+              { label: "Financial Skills", pct: 20, color: "#D97706" },
+            ].map((item, i) => (
+              <div key={i} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>{item.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: item.color }}>{item.pct}%</span>
+                </div>
+                <div style={{ background: "#f3f4f6", borderRadius: 4, height: 8 }}>
+                  <div style={{ width: `${item.pct}%`, height: "100%", background: `linear-gradient(90deg, ${item.color}, ${item.color}88)`, borderRadius: 4 }} />
+                </div>
+              </div>
+            ))}
+            <button style={{ width: "100%", marginTop: 6, padding: "10px", background: "#f0fdf4", border: "2px solid #d1fae5", borderRadius: 10, color: "#15803d", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+              📜 View Full Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={() => setSelectedVideo(null)}>
+          <div style={{ background: "white", borderRadius: 24, overflow: "hidden", width: "100%", maxWidth: 640, boxShadow: "0 40px 80px rgba(0,0,0,0.3)" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ background: `linear-gradient(135deg, ${selectedVideo.categoryColor}33, ${selectedVideo.categoryColor}55)`, height: 220, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <span style={{ fontSize: 72 }}>{selectedVideo.icon}</span>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 64, height: 64, background: "rgba(255,255,255,0.9)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, cursor: "pointer", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>▶</div>
+              </div>
+            </div>
+            <div style={{ padding: "24px" }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <span style={{ background: `${selectedVideo.categoryColor}20`, color: selectedVideo.categoryColor, padding: "3px 12px", borderRadius: 12, fontSize: 12, fontWeight: 700 }}>{selectedVideo.category}</span>
+                {selectedVideo.offlineAvailable && <span style={{ background: "#f0fdf4", color: "#15803d", padding: "3px 12px", borderRadius: 12, fontSize: 12, fontWeight: 700 }}>📥 Offline Available</span>}
+              </div>
+              <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "#111827" }}>{selectedVideo.title}</h2>
+              <p style={{ margin: "0 0 16px", color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>{selectedVideo.description}</p>
+              <div style={{ display: "flex", gap: 16, marginBottom: 20, fontSize: 13, color: "#6b7280" }}>
+                <span>👨‍🏫 {selectedVideo.instructor}</span>
+                <span>⏱ {selectedVideo.duration}</span>
+                <span>★ {selectedVideo.rating}</span>
+                <span>👁 {selectedVideo.views} views</span>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{ flex: 1, padding: "13px", background: "linear-gradient(135deg, #15803d, #16a34a)", border: "none", borderRadius: 12, color: "white", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
+                  ▶ Watch Now
+                </button>
+                {selectedVideo.offlineAvailable && (
+                  <button style={{ padding: "13px 20px", background: "#f0fdf4", border: "2px solid #d1fae5", borderRadius: 12, color: "#15803d", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                    📥 Save Offline
+                  </button>
+                )}
+                <button onClick={() => setSelectedVideo(null)} style={{ padding: "13px 16px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, color: "#6b7280", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        <div>
-          <TutorChat />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

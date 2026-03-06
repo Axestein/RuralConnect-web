@@ -323,7 +323,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <CheckCircle className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">
+              <h4 className="font-semibold mb-2 text-black">
                 {t('homepage.services.transparent')}
               </h4>
               <p className="text-sm text-gray-600">
@@ -332,7 +332,7 @@ export default function Home() {
             </div>
             <div className="text-center">
               <ShieldCheck className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">
+              <h4 className="font-semibold mb-2 text-black">
                 {t('homepage.services.secure')}
               </h4>
               <p className="text-sm text-gray-600">
@@ -341,7 +341,7 @@ export default function Home() {
             </div>
             <div className="text-center">
               <BookOpen className="h-8 w-8 text-emerald-600 mx-auto mb-4" />
-              <h4 className="font-semibold mb-2">
+              <h4 className="font-semibold mb-2 text-black">
                 {t('homepage.services.literacy')}
               </h4>
               <p className="text-sm text-gray-600">
