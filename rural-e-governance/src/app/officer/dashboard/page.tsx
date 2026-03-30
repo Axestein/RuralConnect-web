@@ -1,30 +1,36 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   ClipboardCheck, Users, TrendingUp, AlertTriangle, CheckCircle,
   Clock, MapPin, MessageSquare, FileText, Bell, ChevronRight,
-  ArrowUpRight, Activity, Zap, BarChart3, Calendar
+  ArrowUpRight, Zap, BarChart3, Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 
-const stats = [
-  { label: 'Pending', value: '24', sub: '3 escalated', icon: <Clock size={18} />, color: '#d97706', bg: '#fffbeb', border: '#fde68a', strip: '#f59e0b' },
-  { label: 'In Progress', value: '12', sub: '+2 since morning', icon: <TrendingUp size={18} />, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', strip: '#3b82f6' },
-  { label: 'Resolved Today', value: '8', sub: '↑ vs 6 yesterday', icon: <CheckCircle size={18} />, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', strip: '#22c55e' },
-  { label: 'High Priority', value: '5', sub: 'Needs attention', icon: <AlertTriangle size={18} />, color: '#dc2626', bg: '#fef2f2', border: '#fecaca', strip: '#ef4444' },
-];
-
-const pendingTasks = [
-  { id: 'CMP-123', title: 'Water Pipeline Leak', location: 'Main Street', priority: 'High', time: '2h ago', category: 'Water Supply' },
-  { id: 'CMP-124', title: 'Garbage Accumulation', location: 'Market Area', priority: 'Medium', time: '4h ago', category: 'Sanitation' },
-  { id: 'CMP-125', title: 'Street Light Repair', location: 'Park Road', priority: 'Low', time: '1d ago', category: 'Electricity' },
-  { id: 'CMP-126', title: 'Road Pothole Repair', location: 'Highway Rd', priority: 'High', time: '6h ago', category: 'Potholes' },
-];
+interface Complaint {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: 'pending' | 'in-progress' | 'resolved' | 'rejected';
+  priority: string;
+  createdAt: string;
+  images: string[];
+  location: {
+    address?: string;
+    village: string;
+    district: string;
+    lat?: number;
+    lng?: number;
+  };
+  userName?: string;
+}
 
 const priorityConfig = {
-  High:   { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
-  Medium: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  Low:    { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+  high:   { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
+  medium: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
+  low:    { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
 };
 
 const quickActions = [
@@ -40,7 +46,74 @@ const performance = [
   { label: 'Citizen Satisfaction', value: '4.2/5', pct: 84, color: '#8b5cf6' },
 ];
 
+function getTimeAgo(dateString: string): string {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
+}
+
 export default function OfficerDashboard() {
+  const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadComplaints = () => {
+      const stored = JSON.parse(localStorage.getItem('complaints') || '[]');
+      setAllComplaints(stored);
+      setLoading(false);
+    };
+
+    loadComplaints();
+
+    const interval = setInterval(loadComplaints, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pendingCount = allComplaints.filter(c => c.status === 'pending').length;
+  const inProgressCount = allComplaints.filter(c => c.status === 'in-progress').length;
+  const resolvedCount = allComplaints.filter(c => c.status === 'resolved').length;
+  const highPriorityCount = allComplaints.filter(c => c.priority === 'high' && c.status !== 'resolved' && c.status !== 'rejected').length;
+
+  const stats = [
+    { label: 'Pending', value: String(pendingCount), sub: `${allComplaints.filter(c => c.status === 'pending' && c.priority === 'high').length} high priority`, icon: <Clock size={18} />, color: '#d97706', bg: '#fffbeb', border: '#fde68a', strip: '#f59e0b' },
+    { label: 'In Progress', value: String(inProgressCount), sub: `${inProgressCount} active`, icon: <TrendingUp size={18} />, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', strip: '#3b82f6' },
+    { label: 'Resolved', value: String(resolvedCount), sub: `of ${allComplaints.length} total`, icon: <CheckCircle size={18} />, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', strip: '#22c55e' },
+    { label: 'High Priority', value: String(highPriorityCount), sub: 'Needs attention', icon: <AlertTriangle size={18} />, color: '#dc2626', bg: '#fef2f2', border: '#fecaca', strip: '#ef4444' },
+  ];
+
+  const pendingTasks = allComplaints
+    .filter(c => c.status === 'pending' || c.status === 'in-progress')
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
+
+  const recentActivity = [...allComplaints]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 4)
+    .map(c => ({
+      text: `${c.userName || 'Citizen'} filed ${c.id}`,
+      time: getTimeAgo(c.createdAt),
+      dot: c.status === 'resolved' ? '#22c55e' : c.status === 'in-progress' ? '#3b82f6' : c.priority === 'high' ? '#f97316' : '#8b5cf6',
+    }));
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="animate-spin" style={{ width: 48, height: 48, border: '3px solid #e2e8f0', borderTopColor: '#3b82f6', borderRadius: '50%', margin: '0 auto 16px' }} />
+          <p style={{ color: '#64748b' }}>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: '#f8fafc', minHeight: '100vh', color: '#0f172a' }}>
       <style>{`
@@ -94,13 +167,14 @@ export default function OfficerDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            {/* Notification */}
             <button style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', color: '#64748b', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
               <Bell size={16} />
-              <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', background: '#ef4444', borderRadius: '50%', border: '1.5px solid #fff', boxShadow: '0 0 5px rgba(239,68,68,0.5)' }} />
+              {pendingCount > 0 && (
+                <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', background: '#ef4444', borderRadius: '50%', border: '1.5px solid #fff', boxShadow: '0 0 5px rgba(239,68,68,0.5)' }} />
+              )}
             </button>
             <Link href="/officer/complaints/board" className="btn-primary">
-              <ClipboardCheck size={15} /> New Complaint
+              <ClipboardCheck size={15} /> Complaints Board
             </Link>
           </div>
         </div>
@@ -112,7 +186,7 @@ export default function OfficerDashboard() {
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
           <span style={{ width: '1px', height: '14px', background: '#e2e8f0' }} />
-          <span style={{ fontSize: '13px', color: '#6366f1', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>RDO-234</span>
+          <span style={{ fontSize: '13px', color: '#6366f1', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{allComplaints.length} total complaints</span>
         </div>
 
         {/* KPI Cards */}
@@ -146,46 +220,53 @@ export default function OfficerDashboard() {
                 <div className="section-label" style={{ marginBottom: '4px' }}>Active Queue</div>
                 <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Pending Tasks</h2>
               </div>
-              <Link href="/officer/complaints" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>
+              <Link href="/officer/complaints/board" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>
                 View All <ArrowUpRight size={13} />
               </Link>
             </div>
 
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {pendingTasks.map((task) => {
-                const pc = priorityConfig[task.priority as keyof typeof priorityConfig];
-                return (
-                  <div key={task.id} className="task-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
-                      {/* Priority icon */}
-                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: pc.bg, border: `1px solid ${pc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: pc.color, flexShrink: 0 }}>
-                        <AlertTriangle size={16} />
+              {pendingTasks.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                  <AlertTriangle size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                  <p style={{ fontSize: '14px', fontWeight: 500, margin: '0 0 4px' }}>No pending complaints</p>
+                  <p style={{ fontSize: '13px', margin: 0 }}>Complaints from citizens will appear here</p>
+                </div>
+              ) : (
+                pendingTasks.map((task) => {
+                  const pc = priorityConfig[task.priority as keyof typeof priorityConfig] || priorityConfig.medium;
+                  return (
+                    <div key={task.id} className="task-row">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: pc.bg, border: `1px solid ${pc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: pc.color, flexShrink: 0 }}>
+                          <AlertTriangle size={16} />
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '14px', fontFamily: "'Sora', sans-serif" }}>{task.title}</span>
+                            <span className="badge" style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}`, flexShrink: 0 }}>
+                              {task.priority}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <MapPin size={11} /> {task.location?.village || 'Unknown'}
+                            </span>
+                            <span style={{ color: '#e2e8f0' }}>·</span>
+                            <span>{task.id}</span>
+                            <span style={{ color: '#e2e8f0' }}>·</span>
+                            <span>{getTimeAgo(task.createdAt)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '14px', fontFamily: "'Sora', sans-serif" }}>{task.title}</span>
-                          <span className="badge" style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}`, flexShrink: 0 }}>
-                            {task.priority}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <MapPin size={11} /> {task.location}
-                          </span>
-                          <span style={{ color: '#e2e8f0' }}>·</span>
-                          <span>{task.id}</span>
-                          <span style={{ color: '#e2e8f0' }}>·</span>
-                          <span>{task.time}</span>
-                        </div>
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <Link href="/officer/complaints/board" className="btn-solid" style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}>Manage</Link>
+                        <Link href={`/citizen/complaints/${task.id}`} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>Details</Link>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                      <button className="btn-solid" style={{ fontSize: '12px', padding: '6px 12px' }}>Assign</button>
-                      <button className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>Details</button>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -252,20 +333,19 @@ export default function OfficerDashboard() {
                 <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Activity</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                {[
-                  { text: 'CMP-119 marked resolved', time: '10 min ago', dot: '#22c55e' },
-                  { text: 'New complaint in Rampur', time: '34 min ago', dot: '#f97316' },
-                  { text: 'Priya Sharma filed CMP-122', time: '1h ago', dot: '#3b82f6' },
-                  { text: 'Weekly report generated', time: '2h ago', dot: '#8b5cf6' },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '10px 0', borderBottom: i < 3 ? '1px solid #f8fafc' : 'none' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, marginTop: '5px', flexShrink: 0 }} />
-                    <div>
-                      <p style={{ fontSize: '13px', color: '#374151', margin: 0, fontWeight: 500 }}>{item.text}</p>
-                      <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0', fontFamily: 'JetBrains Mono, monospace' }}>{item.time}</p>
+                {recentActivity.length === 0 ? (
+                  <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '16px 0' }}>No recent activity</p>
+                ) : (
+                  recentActivity.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '10px 0', borderBottom: i < recentActivity.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, marginTop: '5px', flexShrink: 0 }} />
+                      <div>
+                        <p style={{ fontSize: '13px', color: '#374151', margin: 0, fontWeight: 500 }}>{item.text}</p>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0', fontFamily: 'JetBrains Mono, monospace' }}>{item.time}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -280,10 +360,11 @@ export default function OfficerDashboard() {
                 <Zap size={19} />
               </div>
               <div>
-                <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Today's AI Brief</h3>
+                <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{"Today's AI Brief"}</h3>
                 <p style={{ fontSize: '13px', color: '#64748b', margin: '3px 0 0' }}>
-                  Pothole complaints up 18% — consider routing a repair team to Highway Rd today.
-                  Chandpur village overdue on 3 water supply tickets.
+                  {allComplaints.length > 0
+                    ? `${pendingCount} complaint${pendingCount !== 1 ? 's' : ''} pending review. ${highPriorityCount} marked high priority.`
+                    : 'No complaints to analyze yet. Data will appear as citizens file complaints.'}
                 </p>
               </div>
             </div>

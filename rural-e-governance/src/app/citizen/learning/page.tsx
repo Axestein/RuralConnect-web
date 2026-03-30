@@ -151,7 +151,7 @@ export default function LearningPage() {
 
         {/* Left Panel */}
         <div>
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 24 }}>+
             <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: 32, fontWeight: 800, color: "#14532d", margin: 0, lineHeight: 1.1 }}>
               Learning Portal 
             </h1>
