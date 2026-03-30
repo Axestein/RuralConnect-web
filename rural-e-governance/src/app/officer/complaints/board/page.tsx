@@ -1262,71 +1262,10 @@ export default function OfficerKanbanBoard() {
     })
   );
 
-  // Initialize with sample data
+  // Load complaints from localStorage (shared with citizen complaints)
   useEffect(() => {
-    const initializeSampleData = () => {
-      const sampleComplaints: Complaint[] = [
-        {
-          id: 'CMP-1001',
-          title: 'Pothole on Main Road',
-          description: 'Large pothole near the market causing traffic issues',
-          category: 'pothole',
-          status: 'pending',
-          priority: 'high',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          userName: 'Rahul Sharma',
-          userPhone: '9876543210',
-          images: ['image1.jpg', 'image2.jpg'],
-          location: {
-            address: 'Main Road, Near Market',
-            village: 'Sample Village',
-            district: 'North District',
-            lat: 28.6139,
-            lng: 77.2090
-          }
-        },
-        {
-          id: 'CMP-1002',
-          title: 'Garbage Not Collected',
-          description: 'Garbage pile not collected for 3 days',
-          category: 'sanitation',
-          status: 'in-progress',
-          priority: 'medium',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          userName: 'Priya Patel',
-          userPhone: '8765432109',
-          images: ['image3.jpg'],
-          location: {
-            address: 'Street No. 5',
-            village: 'Another Village',
-            district: 'South District',
-            lat: 28.6140,
-            lng: 77.2091
-          }
-        },
-        {
-          id: 'CMP-1003',
-          title: 'Street Light Not Working',
-          description: 'Street light pole number 23 is not working',
-          category: 'street-light',
-          status: 'resolved',
-          priority: 'low',
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          userName: 'Amit Kumar',
-          userPhone: '7654321098',
-          images: [],
-          location: {
-            address: 'Near Park',
-            village: 'Green Village',
-            district: 'East District',
-            lat: 28.6141,
-            lng: 77.2092
-          }
-        }
-      ];
+    const loadComplaints = () => {
+      const storedComplaints: Complaint[] = JSON.parse(localStorage.getItem('complaints') || '[]');
 
       // Group complaints by status
       const grouped: Record<ComplaintStatus, Complaint[]> = {
@@ -1336,9 +1275,10 @@ export default function OfficerKanbanBoard() {
         'rejected': []
       };
 
-      sampleComplaints.forEach((complaint: Complaint) => {
-        if (grouped[complaint.status]) {
-          grouped[complaint.status].push(complaint);
+      storedComplaints.forEach((complaint: Complaint) => {
+        const status = complaint.status as ComplaintStatus;
+        if (grouped[status]) {
+          grouped[status].push(complaint);
         }
       });
 
@@ -1353,7 +1293,11 @@ export default function OfficerKanbanBoard() {
       setLoading(false);
     };
 
-    initializeSampleData();
+    loadComplaints();
+
+    // Refresh every 30 seconds for new complaints
+    const interval = setInterval(loadComplaints, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Handle drag start
@@ -1462,7 +1406,7 @@ export default function OfficerKanbanBoard() {
 
       // Save to localStorage
       const allComplaints = Object.values(updatedComplaints).flat();
-      localStorage.setItem('officerComplaints', JSON.stringify(allComplaints));
+      localStorage.setItem('complaints', JSON.stringify(allComplaints));
 
       showNotification(`Status updated to ${newStatus.replace('-', ' ')}`);
     } 
@@ -1489,7 +1433,7 @@ export default function OfficerKanbanBoard() {
             ...complaints,
             [statusKey]: newComplaints
           }).flat();
-          localStorage.setItem('officerComplaints', JSON.stringify(allComplaints));
+          localStorage.setItem('complaints', JSON.stringify(allComplaints));
         }
       });
     }
@@ -1535,7 +1479,7 @@ export default function OfficerKanbanBoard() {
 
     // Update localStorage
     const allComplaints = Object.values(updatedComplaints).flat();
-    localStorage.setItem('officerComplaints', JSON.stringify(allComplaints));
+    localStorage.setItem('complaints', JSON.stringify(allComplaints));
 
     showNotification('New complaint added');
   };
@@ -1563,7 +1507,7 @@ export default function OfficerKanbanBoard() {
 
         // Update localStorage
         const allComplaints = Object.values(updatedComplaints).flat();
-        localStorage.setItem('officerComplaints', JSON.stringify(allComplaints));
+        localStorage.setItem('complaints', JSON.stringify(allComplaints));
 
         showNotification('Complaint deleted');
       }

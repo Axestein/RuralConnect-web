@@ -132,13 +132,9 @@ export default function NewComplaintPage() {
         userId: 'user123'
       };
 
-      // Save to localStorage for demo
+      // Save to localStorage for demo (shared between citizen and officer views)
       const existingComplaints = JSON.parse(localStorage.getItem('complaints') || '[]');
       localStorage.setItem('complaints', JSON.stringify([...existingComplaints, complaintData]));
-
-      // Also save to officer view
-      const officerComplaints = JSON.parse(localStorage.getItem('officerComplaints') || '[]');
-      localStorage.setItem('officerComplaints', JSON.stringify([...officerComplaints, complaintData]));
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
