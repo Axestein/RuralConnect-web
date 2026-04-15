@@ -53,7 +53,7 @@ export default function EligibilityChat() {
   return (
     <div className="bg-white rounded-xl shadow-md">
       <div className="p-4 border-b">
-        <h3 className="font-semibold text-lg">Scheme Eligibility Assistant</h3>
+        <h3 className="font-semibold text-black text-lg">Scheme Eligibility Assistant</h3>
         <p className="text-sm text-gray-600">Ask about PM-Kisan, Ayushman Bharat, MNREGA, etc.</p>
       </div>
 

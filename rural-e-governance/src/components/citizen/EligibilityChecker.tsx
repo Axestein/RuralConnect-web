@@ -7,8 +7,6 @@ import {
   User, 
   Home, 
   Users, 
-  Landmark,
-  Calendar,
   IndianRupee,
   Leaf,
   Heart,
@@ -17,11 +15,12 @@ import {
   CheckCircle,
   Sparkles,
   ArrowRight,
-  Award,
   Target,
-  FileCheck,
-  TrendingUp
+  Calendar,
+  ExternalLink
 } from 'lucide-react';
+import { UserProfile } from '@/types/scheme';
+import { matchSchemes } from '@/lib/chatbotEngine';
 
 interface EligibilityCheckerProps {
   onClose: () => void;
@@ -163,67 +162,71 @@ export default function EligibilityChecker({ onClose }: EligibilityCheckerProps)
   const checkEligibility = () => {
     setLoading(true);
     
-    // Simulate AI processing
+    // Build user profile from form data
     setTimeout(() => {
-      const mockResults = [
-        {
-          id: 'pm-kisan',
-          name: 'PM-Kisan Samman Nidhi',
-          matchScore: 95,
-          benefits: '₹6,000 per year',
-          eligibility: [
-            '✓ Land ownership confirmed',
-            '✓ Income criteria met',
-            '✓ Valid Aadhaar linked',
-          ],
-          deadline: 'Mar 31, 2024',
-          icon: Leaf,
-        },
-        {
-          id: 'ayushman',
-          name: 'Ayushman Bharat Yojana',
-          matchScore: 87,
-          benefits: '₹5,00,000 health cover',
-          eligibility: [
-            '✓ BPL category eligible',
-            '✓ Family size matched',
-            '✓ No existing coverage',
-          ],
-          deadline: 'Ongoing',
-          icon: Heart,
-        },
-        {
-          id: 'ujjwala',
-          name: 'Ujjwala Yojana',
-          matchScore: 76,
-          benefits: 'Free LPG Connection',
-          eligibility: [
-            '✓ Women in household',
-            '✓ BPL status confirmed',
-            '✓ No existing connection',
-          ],
-          deadline: 'Dec 31, 2024',
-          icon: Home,
-        },
-        {
-          id: 'pm-awas',
-          name: 'PM Awas Yojana',
-          matchScore: 82,
-          benefits: '₹1.2L - ₹2.5L housing aid',
-          eligibility: [
-            '✓ No pucca house',
-            '✓ Income criteria met',
-            '✓ Eligible location',
-          ],
-          deadline: 'Jun 30, 2024',
-          icon: Home,
-        },
-      ];
-      
-      setResults(mockResults);
+      const incomeMap: Record<string, number> = {
+        'Less than ₹50,000': 40000,
+        '₹50,000 - ₹1,00,000': 75000,
+        '₹1,00,000 - ₹2,00,000': 150000,
+        '₹2,00,000 - ₹5,00,000': 350000,
+        'Above ₹5,00,000': 600000,
+      };
+
+      const landMap: Record<string, number> = {
+        'No land': 0,
+        'Less than 1 acre': 0.5,
+        '1-2 acres': 1.5,
+        '2-5 acres': 3.5,
+        'More than 5 acres': 7,
+      };
+
+      const profile: UserProfile = {
+        age: formData.age ? parseInt(formData.age) : undefined,
+        gender: formData.gender ? (formData.gender.toLowerCase() as 'male' | 'female' | 'other') : undefined,
+        income: formData.annualIncome ? incomeMap[formData.annualIncome] : undefined,
+        occupation: formData.occupation ? formData.occupation.toLowerCase() : undefined,
+        education: formData.education || undefined,
+        landAcres: formData.landOwnership ? landMap[formData.landOwnership] : undefined,
+        bplStatus: formData.bplStatus === 'Yes' ? true : formData.bplStatus === 'No' ? false : undefined,
+        maritalStatus: formData.maritalStatus || undefined,
+        familySize: formData.familySize ? parseInt(formData.familySize) : undefined,
+        isRural: true, // Default for rural e-governance
+        isSeniorCitizen: formData.age ? parseInt(formData.age) >= 60 : undefined,
+        isWidow: formData.maritalStatus === 'Widowed',
+      };
+
+      // Use the real matching engine
+      const matched = matchSchemes(profile);
+      const topResults = matched.filter(s => s.score >= 20).slice(0, 8);
+
+      const iconMap: Record<string, typeof Leaf> = {
+        agriculture: Leaf,
+        health: Heart,
+        education: GraduationCap,
+        housing: Home,
+        employment: Briefcase,
+        social: Users,
+        women: Heart,
+        pension: Calendar,
+      };
+
+      const formattedResults = topResults.map(scored => ({
+        id: scored.scheme.id,
+        name: scored.scheme.name,
+        matchScore: scored.score,
+        benefits: scored.scheme.benefits,
+        eligibility: scored.matchReasons.length > 0
+          ? scored.matchReasons
+          : scored.scheme.eligibilityText.slice(0, 3),
+        deadline: scored.scheme.deadline,
+        icon: iconMap[scored.scheme.category] || Target,
+        applicationUrl: scored.scheme.applicationUrl,
+      }));
+
+      setResults(formattedResults);
       setLoading(false);
       setStep(questions.length + 1);
-    }, 2000);
+    }, 1500);
   };
 
   const currentQuestion = questions[step - 1];
@@ -404,9 +407,20 @@ export default function EligibilityChecker({ onClose }: EligibilityCheckerProps)
                         </div>
 
                         <div className="ml-6 flex flex-col space-y-3">
-                          <button className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap">
-                            Apply Now
-                          </button>
+                          {scheme.applicationUrl ? (
+                            <a
+                              href={scheme.applicationUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap flex items-center gap-1"
+                            >
+                              Apply Now <ExternalLink className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <button className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap">
+                              Apply Now
+                            </button>
+                          )}
                           <button className="px-6 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 whitespace-nowrap">
                             View Details
                           </button>
@@ -420,7 +434,19 @@ export default function EligibilityChecker({ onClose }: EligibilityCheckerProps)
                   <button
                     onClick={() => {
                       setStep(1);
-                      setFormData({});
+                      setFormData({
+                        age: '',
+                        gender: '',
+                        maritalStatus: '',
+                        familySize: '',
+                        annualIncome: '',
+                        occupation: '',
+                        education: '',
+                        caste: '',
+                        landOwnership: '',
+                        bplStatus: '',
+                        location: '',
+                      });
                       setResults([]);
                     }}
                     className="px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50"
