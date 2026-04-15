@@ -34,11 +34,14 @@ import {
 import Link from 'next/link';
 import SchemeCard from '@/components/citizen/SchemeCard';
 import EligibilityChecker from '@/components/citizen/EligibilityChecker';
+import EligibilityChat from '@/components/schemes/EligibilityChat';
+import { governmentSchemes } from '@/data/governmentSchemes';
 
 export default function SchemesPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showEligibilityChecker, setShowEligibilityChecker] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const categories = [
     { id: 'all', name: 'All Schemes', icon: Target },
@@ -48,118 +51,34 @@ export default function SchemesPage() {
     { id: 'housing', name: 'Housing', icon: Home },
     { id: 'social', name: 'Social Welfare', icon: Users },
     { id: 'employment', name: 'Employment', icon: Briefcase },
+    { id: 'women', name: 'Women & Child', icon: Heart },
+    { id: 'pension', name: 'Pension', icon: Calendar },
   ];
 
-  const schemes = [
-    {
-      id: 'pm-kisan',
-      name: 'PM-Kisan Samman Nidhi',
-      description: 'Income support of ₹6000 per year to farmer families',
-      category: 'agriculture',
-      ministry: 'Ministry of Agriculture',
-      deadline: 'Mar 31, 2024',
-      benefit: '₹6,000/year',
-      eligibility: [
-        'Small and marginal farmer families',
-        'Owns cultivable land',
-        'Family income below ₹2 lakh',
-      ],
-      documents: ['Aadhaar', 'Land Records', 'Bank Account'],
-      matchScore: 95,
-      appliedCount: '12.3L+',
-      status: 'active',
-    },
-    {
-      id: 'ayushman-bharat',
-      name: 'Ayushman Bharat Yojana',
-      description: 'Health coverage up to ₹5 lakh per family per year',
-      category: 'health',
-      ministry: 'Ministry of Health',
-      deadline: 'Ongoing',
-      benefit: '₹5,00,000 cover',
-      eligibility: [
-        'SECC database identified families',
-        'Rural and urban poor',
-        'No age limit',
-      ],
-      documents: ['Aadhaar', 'Ration Card', 'Income Certificate'],
-      matchScore: 87,
-      appliedCount: '8.7L+',
-      status: 'active',
-    },
-    {
-      id: 'ujjwala',
-      name: 'Ujjwala Yojana',
-      description: 'Free LPG connections to women from BPL households',
-      category: 'social',
-      ministry: 'Ministry of Petroleum',
-      deadline: 'Dec 31, 2024',
-      benefit: 'Free LPG Connection',
-      eligibility: [
-        'Women above 18 years',
-        'BPL household',
-        'No existing LPG connection',
-      ],
-      documents: ['Aadhaar', 'BPL Certificate', 'Age Proof'],
-      matchScore: 76,
-      appliedCount: '5.2L+',
-      status: 'active',
-    },
-    {
-      id: 'pm-awas',
-      name: 'PM Awas Yojana',
-      description: 'Housing for All - Financial assistance for house construction',
-      category: 'housing',
-      ministry: 'Ministry of Housing',
-      deadline: 'Jun 30, 2024',
-      benefit: '₹1.2L - ₹2.5L',
-      eligibility: [
-        'Homeless or living in kutcha house',
-        'Not owned a pucca house earlier',
-        'Annual income criteria',
-      ],
-      documents: ['Aadhaar', 'Income Certificate', 'Land Document'],
-      matchScore: 82,
-      appliedCount: '15.4L+',
-      status: 'active',
-    },
-    {
-      id: 'pm-kaushal',
-      name: 'PM Kaushal Vikas Yojana',
-      description: 'Skill training and certification for youth',
-      category: 'education',
-      ministry: 'Ministry of Skill Development',
-      deadline: 'Ongoing',
-      benefit: 'Free Skill Training',
-      eligibility: [
-        'Age 15-45 years',
-        'Minimum 8th pass',
-        'Unemployed youth',
-      ],
-      documents: ['Aadhaar', 'Education Certificate', 'Bank Account'],
-      matchScore: 68,
-      appliedCount: '3.1L+',
-      status: 'active',
-    },
-    {
-      id: 'pm-fasal',
-      name: 'PM Fasal Bima Yojana',
-      description: 'Crop insurance scheme for farmers',
-      category: 'agriculture',
-      ministry: 'Ministry of Agriculture',
-      deadline: 'May 15, 2024',
-      benefit: 'Insurance coverage',
-      eligibility: [
-        'Farmers with cultivable land',
-        'Loanee/non-loanee farmers',
-        'All crops covered',
-      ],
-      documents: ['Aadhaar', 'Land Records', 'Bank Passbook'],
-      matchScore: 73,
-      appliedCount: '6.8L+',
-      status: 'active',
-    },
-  ];
+  // Use scheme data from JSON database
+  const schemes = governmentSchemes.map(s => ({
+    id: s.id,
+    name: s.name,
+    description: s.description,
+    category: s.category,
+    ministry: s.ministry,
+    deadline: s.deadline,
+    benefit: s.benefits,
+    eligibility: s.eligibilityText,
+    documents: s.documents,
+    matchScore: Math.floor(Math.random() * 30) + 65, // Random score until user profile is available
+    appliedCount: s.appliedCount,
+    status: s.status,
+  }));
+
+  const filteredSchemes = schemes.filter(s => {
+    const categoryMatch = selectedCategory === 'all' || s.category === selectedCategory;
+    const searchMatch = !searchQuery || 
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.ministry.toLowerCase().includes(searchQuery.toLowerCase());
+    return categoryMatch && searchMatch;
+  });
 
   const featuredSchemes = schemes.filter(s => s.matchScore >= 85).slice(0, 3);
 
@@ -185,6 +104,13 @@ export default function SchemesPage() {
               >
                 <Sparkles className="h-5 w-5 mr-2" />
                 Check Your Eligibility
+              </button>
+              <button
+                onClick={() => setShowChatbot(!showChatbot)}
+                className="flex items-center px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/20"
+              >
+                <span className="mr-2">🤖</span>
+                AI Chat Assistant
               </button>
               <button className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50">
                 <Download className="h-5 w-5 text-gray-600" />
@@ -219,28 +145,50 @@ export default function SchemesPage() {
                 <h2 className="text-2xl font-bold mb-3">Discover Schemes You're Eligible For</h2>
                 <p className="text-white/90 mb-6 max-w-2xl">
                   Our AI analyzes your profile and matches you with government schemes you qualify for. 
-                  Get personalized recommendations in seconds.
+                  Chat with our assistant or use the step-by-step checker.
                 </p>
-                <button 
-                  onClick={() => setShowEligibilityChecker(true)}
-                  className="px-6 py-3 bg-white text-gray-900 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center"
-                >
-                  Start Eligibility Check
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </button>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    onClick={() => setShowChatbot(true)}
+                    className="px-6 py-3 bg-white text-gray-900 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center"
+                  >
+                    🤖 Chat with AI Assistant
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                  </button>
+                  <button 
+                    onClick={() => setShowEligibilityChecker(true)}
+                    className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-xl font-medium hover:bg-white/30 transition-colors flex items-center"
+                  >
+                    <Sparkles className="h-5 w-5 mr-2" />
+                    Step-by-Step Checker
+                  </button>
+                </div>
               </div>
               <div className="hidden lg:block">
                 <div className="flex items-center space-x-2">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                     <BarChart3 className="h-8 w-8" />
                   </div>
-                  <div className="text-4xl font-bold">95%</div>
-                  <div className="text-sm">Average<br/>Match Rate</div>
+                  <div className="text-4xl font-bold">{governmentSchemes.length}+</div>
+                  <div className="text-sm">Schemes<br/>Available</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Chatbot Modal */}
+        {showChatbot && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="max-w-lg w-full max-h-[90vh]">
+              <EligibilityChat
+                isOpen={showChatbot}
+                onClose={() => setShowChatbot(false)}
+                mode="modal"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Featured Schemes */}
         <div className="mb-12">
@@ -310,10 +258,34 @@ export default function SchemesPage() {
 
         {/* Schemes Grid */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {schemes.map((scheme) => (
+          {filteredSchemes.map((scheme) => (
             <SchemeCard key={scheme.id} scheme={scheme} />
           ))}
+          {filteredSchemes.length === 0 && (
+            <div className="lg:col-span-2 text-center py-12">
+              <p className="text-gray-500 text-lg">No schemes found matching your criteria.</p>
+              <button 
+                onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
+                className="mt-4 text-blue-600 hover:text-blue-800"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Floating Chatbot Button */}
+        {!showChatbot && (
+          <button
+            onClick={() => setShowChatbot(true)}
+            className="fixed bottom-6 right-6 z-40 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-blue-500/40 hover:scale-105 transition-all duration-300 group"
+          >
+            <span className="text-2xl">🤖</span>
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+              AI
+            </span>
+          </button>
+        )}
 
         {/* Help Section */}
         <div className="mt-12 bg-gray-900 rounded-2xl p-8 text-white">
